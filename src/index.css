@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #0e6c3d;
+  --color-brand-red: #cf1f25;
+  --color-brand-blue: #1f3b90;
+  --color-brand-ink: #0f172a;
+  --color-brand-muted: #475569;
+  --color-brand-surface: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Manrope, Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-optical-sizing: auto;
+  background: #f8fafc;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
