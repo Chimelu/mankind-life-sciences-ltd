@@ -1,4 +1,5 @@
 import { MainLayout } from './app/layout/MainLayout'
+import { ScrollToTop } from './app/routing/ScrollToTop'
 import { AboutUsPage } from './features/storefront/pages/AboutUsPage'
 import { AllProductsPage } from './features/storefront/pages/AllProductsPage'
 import { ContactUsPage } from './features/storefront/pages/ContactUsPage'
@@ -10,6 +11,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 function App() {
   return (
     <MainLayout>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutUsPage />} />
