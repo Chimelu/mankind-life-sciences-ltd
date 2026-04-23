@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { catalogProducts } from '../../storefront/data/catalogProducts'
 import { dashboardOrders } from '../data/orders'
 
 const demoLineItems = [
@@ -10,6 +11,13 @@ const demoLineItems = [
 export function OrderDetailsPage() {
   const { orderId } = useParams()
   const order = dashboardOrders.find((item) => item.id === orderId)
+  const lineItemsWithImages = demoLineItems.map((item) => {
+    const matchedProduct = catalogProducts.find((product) => product.name === item.name)
+    return {
+      ...item,
+      image: matchedProduct?.image ?? '/logo_no_background.png',
+    }
+  })
 
   if (!order) {
     return (
@@ -29,6 +37,16 @@ export function OrderDetailsPage() {
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5">
+      <div className="mb-3">
+        <Link
+          to="/dashboard/orders"
+          className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-brand-green hover:text-brand-green"
+        >
+          <span aria-hidden="true">←</span>
+          Back to orders
+        </Link>
+      </div>
+
       <div className="rounded-3xl border border-slate-200 bg-white p-5 md:p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-green">
           Order Details
@@ -43,15 +61,29 @@ export function OrderDetailsPage() {
       <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 md:p-7">
         <h2 className="text-xl font-bold text-slate-900">Items</h2>
         <div className="mt-4 space-y-3">
-          {demoLineItems.map((item) => (
+          {lineItemsWithImages.map((item) => (
             <article
               key={item.name}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
             >
-              <p className="font-medium text-slate-800">{item.name}</p>
-              <p className="text-sm text-slate-600">
-                Qty: {item.quantity} · Unit: ₦{item.unitPrice.toLocaleString()} ·
-                Line: ₦{(item.quantity * item.unitPrice).toLocaleString()}
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-1.5">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-slate-800">{item.name}</p>
+                  <p className="text-sm text-slate-600">
+                    Qty: {item.quantity} · Unit: ₦{item.unitPrice.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <p className="text-right text-sm font-semibold text-slate-700">
+                ₦{(item.quantity * item.unitPrice).toLocaleString()}
               </p>
             </article>
           ))}

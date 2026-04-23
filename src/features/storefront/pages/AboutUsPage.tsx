@@ -1,6 +1,13 @@
 import { DealerCard } from '../components/DealerCard'
 import { dealers } from '../data/dealers'
 
+const aboutGalleryImages = [
+  '/WhatsApp Image 2026-04-23 at 17.48.12.jpeg',
+  '/WhatsApp Image 2026-04-23 at 17.45.59.jpeg',
+  '/WhatsApp Image 2026-04-23 at 17.45.59 (1).jpeg',
+  '/WhatsApp Image 2026-04-23 at 17.43.27.jpeg',
+]
+
 export function AboutUsPage() {
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5 md:py-10">
@@ -36,7 +43,7 @@ export function AboutUsPage() {
             healthcare providers and end users.
           </p>
           <p>
-            We are active in pharmaceutical trading and manufacturing, with
+            We are active in pharmaceutical imports and distribution, with
             products sourced from reputable partners and supported by strict
             quality assurance standards. Our brands are trusted across Nigeria
             and the West African sub-region.
@@ -47,17 +54,25 @@ export function AboutUsPage() {
             impact in the healthcare sector.
           </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <img
-              src="https://images.unsplash.com/photo-1576602976047-174e57a47881?auto=format&fit=crop&w=800&q=80"
-              alt="Pharmaceutical quality process"
-              className="h-44 w-full rounded-2xl object-cover"
-            />
-            <img
-              src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80"
-              alt="Healthcare product distribution"
-              className="h-44 w-full rounded-2xl object-cover"
-            />
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            {aboutGalleryImages.map((imagePath, index) => (
+              <div
+                key={imagePath}
+                className={`group relative overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white p-2 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
+                  index % 2 === 0 ? 'sm:-rotate-1' : 'sm:rotate-1'
+                }`}
+              >
+                <div className="absolute inset-x-7 top-2 h-1.5 rounded-full bg-slate-200/80" />
+                <div className="mt-3 flex h-56 items-center justify-center rounded-xl bg-slate-100 p-2 sm:h-52">
+                  <img
+                    src={imagePath}
+                    alt={`Mankind team and partners ${index + 1}`}
+                    className="h-full w-full rounded-lg object-contain transition duration-300 group-hover:scale-[1.02]"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </article>
 
@@ -72,11 +87,17 @@ export function AboutUsPage() {
             </li>
           </ul>
 
-          <img
-            src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=80"
-            alt="Pharmaceutical team collaboration"
-            className="mt-6 h-44 w-full rounded-2xl object-cover"
-          />
+          <div className="group relative mt-6 overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white p-2 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="absolute inset-x-7 top-2 h-1.5 rounded-full bg-slate-200/80" />
+            <div className="mt-3 flex h-56 items-center justify-center rounded-xl bg-slate-100 p-2">
+              <img
+                src="/WhatsApp Image 2026-04-23 at 17.45.59.jpeg"
+                alt="Mankind leadership and team session"
+                className="h-full w-full rounded-lg object-contain transition duration-300 group-hover:scale-[1.02]"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </aside>
       </div>
 

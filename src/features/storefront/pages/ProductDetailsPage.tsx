@@ -30,6 +30,8 @@ export function ProductDetailsPage() {
   const [quantity, setQuantity] = useState(1)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [isZoomed, setIsZoomed] = useState(false)
+  const [shareMessage, setShareMessage] = useState('')
+  const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
 
   const relatedProducts = useMemo(() => {
     if (!product) return []
@@ -58,6 +60,29 @@ export function ProductDetailsPage() {
   }
 
   const totalPrice = product.price * quantity
+  const productUrl =
+    typeof window !== 'undefined'
+      ? window.location.href
+      : `https://mankind.ng/products/${product.id}`
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.name,
+          text: `Check out ${product.name} on Mankind.`,
+          url: productUrl,
+        })
+        return
+      }
+      await navigator.clipboard.writeText(productUrl)
+      setShareMessage('Product link copied.')
+      window.setTimeout(() => setShareMessage(''), 1800)
+    } catch {
+      setShareMessage('Unable to share right now.')
+      window.setTimeout(() => setShareMessage(''), 1800)
+    }
+  }
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5">
@@ -74,6 +99,16 @@ export function ProductDetailsPage() {
 
       <div className="grid gap-8 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-[1fr,1.1fr] md:p-8">
         <div>
+          <div className="mb-2 flex justify-end">
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-brand-green hover:text-brand-green"
+            >
+              <ShareIcon />
+              Share
+            </button>
+          </div>
           <div className="flex h-[360px] items-center justify-center overflow-hidden rounded-2xl bg-slate-100 p-4">
             <img
               src={product.image}
@@ -106,6 +141,7 @@ export function ProductDetailsPage() {
               className="h-16 w-16 rounded-xl border border-slate-200 bg-white object-cover p-1"
             />
           </div>
+          {shareMessage && <p className="mt-2 text-right text-xs font-medium text-brand-green">{shareMessage}</p>}
         </div>
 
         <div>
@@ -191,6 +227,69 @@ export function ProductDetailsPage() {
       </div>
 
       <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 md:p-8">
+        <div className="border-b border-slate-200">
+          <div className="flex items-center gap-5 text-sm font-semibold">
+            <button
+              type="button"
+              onClick={() => setActiveInfoTab('description')}
+              className={`border-b-2 px-1 pb-2 pt-1 transition ${
+                activeInfoTab === 'description'
+                  ? 'border-brand-red text-brand-red'
+                  : 'border-transparent text-slate-500'
+              }`}
+            >
+              Description
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveInfoTab('reviews')}
+              className={`border-b-2 px-1 pb-2 pt-1 transition ${
+                activeInfoTab === 'reviews'
+                  ? 'border-brand-red text-brand-red'
+                  : 'border-transparent text-slate-500'
+              }`}
+            >
+              Ratings & Review
+            </button>
+          </div>
+        </div>
+
+        {activeInfoTab === 'description' ? (
+          <div className="mt-4 text-sm leading-7 text-slate-700">
+            <p>{product.description}</p>
+            <p className="mt-3">
+              This product is supplied through our quality-controlled import and distribution
+              channels, with professional support for pharmacies, clinics, and wholesale buyers.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-4xl font-bold text-slate-900">4.8</p>
+              <p className="text-amber-500">★★★★★</p>
+              <p className="text-sm text-slate-500">Based on 58 verified reviews</p>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {reviews.map((review) => (
+                <article
+                  key={review.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <p className="text-sm font-semibold text-slate-900">{review.name}</p>
+                  <p className="mt-1 text-xs text-amber-500">
+                    {'★'.repeat(review.rating)}
+                    {'☆'.repeat(5 - review.rating)}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{review.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 md:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-green">
           You may also like
         </p>
@@ -203,37 +302,27 @@ export function ProductDetailsPage() {
           ))}
         </div>
       </section>
-
-      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 md:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-green">
-          Ratings and reviews
-        </p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
-          Verified buyer feedback
-        </h2>
-
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <p className="text-4xl font-bold text-slate-900">4.8</p>
-          <p className="text-amber-500">★★★★★</p>
-          <p className="text-sm text-slate-500">Based on 58 verified reviews</p>
-        </div>
-
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {reviews.map((review) => (
-            <article
-              key={review.id}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-            >
-              <p className="text-sm font-semibold text-slate-900">{review.name}</p>
-              <p className="mt-1 text-xs text-amber-500">
-                {'★'.repeat(review.rating)}
-                {'☆'.repeat(5 - review.rating)}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{review.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
     </section>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.6 13.4 15.4 17.6" />
+      <path d="M15.4 6.4 8.6 10.6" />
+    </svg>
   )
 }

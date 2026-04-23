@@ -6,7 +6,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
 export function Navbar() {
   const navigate = useNavigate()
-  const { isSignedIn, signInDemo, signOut, user } = useAuth()
+  const { isSignedIn, signOut, user } = useAuth()
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false)
   const [isProfilePinned, setIsProfilePinned] = useState(false)
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
@@ -142,12 +142,12 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <button
-              onClick={signInDemo}
+            <Link
+              to="/auth/sign-in"
               className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-brand-ink transition hover:border-brand-green hover:text-brand-green"
             >
               Sign in
-            </button>
+            </Link>
           )}
         </div>
       </div>

@@ -1,6 +1,11 @@
 import { MainLayout } from './app/layout/MainLayout'
 import { RequireAuth } from './app/routing/RequireAuth'
 import { ScrollToTop } from './app/routing/ScrollToTop'
+import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage'
+import { OtpPage } from './features/auth/pages/OtpPage'
+import { ResetPasswordPage } from './features/auth/pages/ResetPasswordPage'
+import { SignInPage } from './features/auth/pages/SignInPage'
+import { SignUpPage } from './features/auth/pages/SignUpPage'
 import { MyOrdersPage } from './features/dashboard/pages/MyOrdersPage'
 import { OrderDetailsPage } from './features/dashboard/pages/OrderDetailsPage'
 import { ProfilePage } from './features/dashboard/pages/ProfilePage'
@@ -25,6 +30,11 @@ function App() {
         <Route path="/products/:productId" element={<ProductDetailsPage />} />
         <Route path="/favourites" element={<FavouritesPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/auth/sign-in" element={<SignInPage />} />
+        <Route path="/auth/sign-up" element={<SignUpPage />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/otp" element={<OtpPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/dashboard"
           element={
