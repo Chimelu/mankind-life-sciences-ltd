@@ -192,12 +192,12 @@ export function HomePage() {
             <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-brand-red/15" />
             <div className="absolute right-10 top-14 h-44 w-44 rounded-full bg-brand-green/20" />
             <div className="absolute right-20 top-24 h-40 w-40 rounded-full bg-brand-blue/15" />
-            <div className="absolute bottom-1 left-2 rounded-2xl bg-white px-6 py-4 shadow-md">
+            {/* <div className="absolute bottom-1 left-2 rounded-2xl bg-white px-6 py-4 shadow-md">
               <p className="text-sm font-medium text-brand-muted">Mankind care</p>
               <p className="text-lg font-semibold text-brand-ink">
                 The company is powered by professionals in Pharmaceuticals, Medicine, optometry, Statistics and management.
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
 
