@@ -37,7 +37,7 @@ const demoProducts: Product[] = [
     name: 'Mebendazol 100mg *30 Tabs',
     category: 'Tablets',
     price: 9250,
-    image: 'https://images.unsplash.com/photo-1626676812991-c65f0f8f4f0c?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 2,
@@ -65,7 +65,7 @@ const demoProducts: Product[] = [
     name: 'Vitaced Complete A-Z',
     category: 'Vitamins',
     price: 17550,
-    image: 'https://images.unsplash.com/photo-1616671276441-2f2c277b8bf1?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 6,

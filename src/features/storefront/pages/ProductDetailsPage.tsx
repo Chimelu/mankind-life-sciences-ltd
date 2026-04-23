@@ -28,6 +28,8 @@ export function ProductDetailsPage() {
   const { productId } = useParams()
   const product = catalogProducts.find((item) => String(item.id) === productId)
   const [quantity, setQuantity] = useState(1)
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
+  const [isZoomed, setIsZoomed] = useState(false)
 
   const relatedProducts = useMemo(() => {
     if (!product) return []
@@ -72,11 +74,24 @@ export function ProductDetailsPage() {
 
       <div className="grid gap-8 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-[1fr,1.1fr] md:p-8">
         <div>
-          <div className="flex h-[360px] items-center justify-center rounded-2xl bg-slate-100 p-4">
+          <div className="flex h-[360px] items-center justify-center overflow-hidden rounded-2xl bg-slate-100 p-4">
             <img
               src={product.image}
               alt={product.name}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain transition-transform duration-150 ease-out"
+              style={{
+                transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                transform: isZoomed ? 'scale(2.2)' : 'scale(1)',
+                cursor: isZoomed ? 'zoom-out' : 'zoom-in',
+              }}
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect()
+                const x = ((event.clientX - rect.left) / rect.width) * 100
+                const y = ((event.clientY - rect.top) / rect.height) * 100
+                setZoomPosition({ x, y })
+              }}
             />
           </div>
           <div className="mt-3 flex gap-2">
