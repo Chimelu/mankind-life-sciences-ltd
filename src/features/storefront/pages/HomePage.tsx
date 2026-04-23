@@ -6,19 +6,19 @@ import { dealers } from '../data/dealers'
 
 const slides = [
   {
-    eyebrow: 'Manufacturer-grade pharmaceutical production',
-    title: 'Drug Manufacturing Backed by Quality Control',
+    eyebrow: 'Pharmaceutical imports and nationwide distribution',
+    title: 'We Are Active in Pharmaceutical Imports and Distribution',
     subtitle:
-      'We produce trusted pharmaceutical products with disciplined process controls, quality assurance, and dependable supply standards.',
-    cta: 'View manufacturing lines',
+      'We supply approved pharmaceutical products through trusted import channels and structured distribution networks for hospitals, pharmacies, and dealers.',
+    cta: 'Explore distribution network',
     tone: 'bg-[#d8f0dd]',
   },
   {
-    eyebrow: 'Trading and distribution network',
-    title: 'Reliable Pharmaceutical Trading for B2B Supply',
+    eyebrow: 'Manufacturing roadmap and quality systems',
+    title: 'Advancing Toward Scalable Local Manufacturing',
     subtitle:
-      'Source approved products for hospitals, pharmacies, clinics, and distributors through our structured trading channels.',
-    cta: 'Explore trading catalog',
+      'As we expand into manufacturing, we are strengthening quality systems, operations, and compliance structures for reliable long-term production.',
+    cta: 'View manufacturing roadmap',
     tone: 'bg-[#e6f4ff]',
   },
   {
@@ -108,7 +108,7 @@ export function HomePage() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
+    }, 8000)
 
     return () => window.clearInterval(timer)
   }, [])
@@ -194,8 +194,8 @@ export function HomePage() {
             <div className="absolute right-20 top-24 h-40 w-40 rounded-full bg-brand-blue/15" />
             <div className="absolute bottom-1 left-2 rounded-2xl bg-white px-6 py-4 shadow-md">
               <p className="text-sm font-medium text-brand-muted">Mankind care</p>
-              <p className="text-xl font-semibold text-brand-ink">
-                Professional support
+              <p className="text-lg font-semibold text-brand-ink">
+                The company is powered by professionals in Pharmaceuticals, Medicine, optometry, Statistics and management.
               </p>
             </div>
           </div>

@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../../app/auth/AuthContext'
 import { navLinks } from '../data/navigation'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { catalogProducts } from '../data/catalogProducts'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 
 export function Navbar() {
+  const navigate = useNavigate()
   const { isSignedIn, signInDemo, signOut, user } = useAuth()
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false)
   const [isProfilePinned, setIsProfilePinned] = useState(false)
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const location = useLocation()
   const closeTimeoutRef = useRef<number | null>(null)
   const initials = user?.name
@@ -21,6 +25,8 @@ export function Navbar() {
     setIsMobileProfileOpen(false)
     setIsProfilePinned(false)
     setIsLogoutConfirmOpen(false)
+    setIsMobileSearchOpen(false)
+    setSearchQuery('')
   }, [location.pathname])
 
   const isDesktopViewport = () =>
@@ -58,18 +64,23 @@ export function Navbar() {
 
   const isProfileRoute = location.pathname.startsWith('/dashboard/profile')
   const isOrdersRoute = location.pathname.startsWith('/dashboard/orders')
+  const searchSuggestions = searchQuery.trim()
+    ? catalogProducts
+        .filter((product) => product.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+        .slice(0, 8)
+    : []
 
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[96rem] items-center gap-3 px-3 py-3 md:px-5">
-        <Link to="/" className="flex items-center gap-1">
+        <Link to="/" className="flex items-center gap-0.5">
           <img
             src="/logo_no_background.png"
             alt="Mankind logo"
             className="h-10 w-10 object-contain"
           />
-          <span className="-ml-0.5 text-2xl font-semibold tracking-tight text-brand-green">
+          <span className="-ml-0.5 text-xl font-semibold tracking-tight text-brand-green md:text-2xl">
             Mankind
           </span>
         </Link>
@@ -83,6 +94,14 @@ export function Navbar() {
         </label>
 
         <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsMobileSearchOpen(true)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full p-2 transition hover:bg-slate-100 md:hidden"
+            aria-label="Open search"
+          >
+            <SearchIcon />
+          </button>
           <Link
             to="/cart"
             className="relative rounded-full p-2 transition hover:bg-slate-100"
@@ -151,6 +170,75 @@ export function Navbar() {
           </nav>
         </div>
       </header>
+
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-[85] md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setIsMobileSearchOpen(false)
+              setSearchQuery('')
+            }}
+            aria-label="Close search"
+          />
+          <div className="relative rounded-b-3xl border-b border-slate-200 bg-white px-3 pb-4 pt-3 shadow-xl">
+            <div className="flex items-center gap-2">
+              <label className="relative flex-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <SearchIcon />
+                </span>
+                <input
+                  autoFocus
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search products..."
+                  className="w-full rounded-full border border-slate-300 py-3 pl-10 pr-4 text-sm outline-none focus:border-brand-green"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileSearchOpen(false)
+                  setSearchQuery('')
+                }}
+                className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+
+            {searchQuery.trim() && (
+              <div className="mt-3 max-h-[55vh] overflow-auto rounded-2xl border border-slate-200 bg-white p-2">
+                {searchSuggestions.length === 0 ? (
+                  <p className="px-2 py-3 text-sm text-slate-500">
+                    No matching products found.
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {searchSuggestions.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => {
+                          setIsMobileSearchOpen(false)
+                          setSearchQuery('')
+                          navigate(`/products/${product.id}`)
+                        }}
+                        className="block w-full rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-100"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{product.name}</p>
+                        <p className="text-xs text-slate-500">{product.category}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {isSignedIn && isMobileProfileOpen && (
         <div className="fixed inset-0 z-[80] md:pointer-events-none">
@@ -288,6 +376,15 @@ function HeartIcon() {
       aria-hidden="true"
     >
       <path d="M20.8 8.6a5 5 0 0 0-8.8-3.2 5 5 0 0 0-8.8 3.2c0 5.8 8.8 10.8 8.8 10.8s8.8-5 8.8-10.8Z" />
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-brand-ink" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
     </svg>
   )
 }
