@@ -1,22 +1,37 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { resetPassword } from '../../../api/auth.api'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') ?? ''
+  const otp = searchParams.get('otp') ?? ''
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (password !== confirmPassword) {
       setError('Passwords do not match.')
       return
     }
+    if (!otp) {
+      setError('Missing OTP. Please restart password reset.')
+      return
+    }
     setError('')
-    navigate('/auth/sign-in?reset=1')
+    setIsSubmitting(true)
+    try {
+      await resetPassword({ email, otp, newPassword: password })
+      navigate('/auth/sign-in?reset=1')
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Password reset failed')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -50,9 +65,10 @@ export function ResetPasswordPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full rounded-full bg-brand-green py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Reset password
+            {isSubmitting ? 'Resetting...' : 'Reset password'}
           </button>
         </form>
       </div>

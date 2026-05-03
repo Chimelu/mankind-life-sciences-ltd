@@ -68,12 +68,14 @@ const categoryItems: CategoryItem[] = [
 ]
 
 type CategoryShowcaseProps = {
+  categories?: string[]
   selectedTab: CategoryTab
   onTabChange: (tab: CategoryTab) => void
   onSelectProductCategory: (category: string) => void
 }
 
 export function CategoryShowcase({
+  categories = [],
   selectedTab,
   onTabChange,
   onSelectProductCategory,
@@ -84,7 +86,32 @@ export function CategoryShowcase({
     'Laboratory Tests Category',
   ]
 
-  const visibleItems = categoryItems.filter((item) => item.group === selectedTab)
+  const dynamicItems: CategoryItem[] =
+    categories.length > 0
+      ? categories.map((name, index) => {
+          const groups: CategoryTab[] = [
+            'Drugs Category',
+            'Non-Drugs Category',
+            'Laboratory Tests Category',
+          ]
+          const accents = [
+            'bg-green-100 text-green-600',
+            'bg-rose-100 text-rose-600',
+            'bg-cyan-100 text-cyan-600',
+            'bg-indigo-100 text-indigo-600',
+            'bg-amber-100 text-amber-600',
+          ]
+          return {
+            name,
+            group: groups[index % groups.length],
+            accent: accents[index % accents.length],
+            icon: name.slice(0, 1).toUpperCase(),
+            productCategory: name,
+          }
+        })
+      : categoryItems
+
+  const visibleItems = dynamicItems.filter((item) => item.group === selectedTab)
 
   return (
     <section className="mt-8 p-1">

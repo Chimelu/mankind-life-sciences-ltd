@@ -22,6 +22,7 @@ type AuthContextValue = {
 }
 
 const STORAGE_KEY = 'mankind-auth-user'
+const TOKEN_STORAGE_KEY = 'mankind-auth-token'
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signOut = () => {
     setUser(null)
     window.localStorage.removeItem(STORAGE_KEY)
+    window.localStorage.removeItem(TOKEN_STORAGE_KEY)
   }
 
   const updateUser = (nextUser: User) => {

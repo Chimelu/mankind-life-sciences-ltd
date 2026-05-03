@@ -1,69 +1,19 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-
-type CartItem = {
-  id: number
-  name: string
-  sku: string
-  price: number
-  quantity: number
-  moq: number
-  pack: string
-  image: string
-}
-
-const initialItems: CartItem[] = [
-  {
-    id: 1,
-    name: 'Mankind Paracetamol 500mg',
-    sku: 'MNK-PARA-500',
-    price: 300,
-    quantity: 40,
-    moq: 20,
-    pack: 'Case of 20 strips',
-    image:
-      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-    id: 2,
-    name: 'Mankind Cough Relief Syrup',
-    sku: 'MNK-CRS-120',
-    price: 1850,
-    quantity: 24,
-    moq: 12,
-    pack: 'Carton of 12 bottles',
-    image:
-      'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=500&q=80',
-  },
-  {
-    id: 3,
-    name: 'Mankind Rapid Test Cassette',
-    sku: 'MNK-LAB-RTC',
-    price: 9600,
-    quantity: 10,
-    moq: 5,
-    pack: 'Box of 10 cassettes',
-    image:
-      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=500&q=80',
-  },
-]
+import { useStorefront } from '../state/StorefrontContext'
 
 export function CartPage() {
-  const [items, setItems] = useState<CartItem[]>(initialItems)
+  const { cartItems: items, setCartItemQuantity, removeFromCart } = useStorefront()
   const [fulfillmentMethod, setFulfillmentMethod] = useState<'pickup' | 'delivery'>(
     'delivery',
   )
 
   const setItemQuantity = (id: number, quantity: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, quantity) } : item,
-      ),
-    )
+    setCartItemQuantity(id, quantity)
   }
 
   const removeItem = (id: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
+    removeFromCart(id)
   }
 
   const subtotal = useMemo(

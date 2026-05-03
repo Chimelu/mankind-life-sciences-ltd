@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getAllCategories } from '../../../api/categories.api'
+import { getAllDistributors } from '../../../api/distributors.api'
 import { CategoryShowcase } from '../components/CategoryShowcase'
 import { DealerCard } from '../components/DealerCard'
+import type { Dealer } from '../components/DealerCard'
 import { ProductCard, type Product } from '../components/ProductCard'
-import { dealers } from '../data/dealers'
 
 const slides = [
   {
@@ -101,6 +103,8 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [categoryNames, setCategoryNames] = useState<string[]>([])
+  const [dealers, setDealers] = useState<Dealer[]>([])
   const [selectedCategoryTab, setSelectedCategoryTab] = useState<
     'Drugs Category' | 'Non-Drugs Category' | 'Laboratory Tests Category'
   >('Drugs Category')
@@ -129,6 +133,26 @@ export function HomePage() {
   useEffect(() => {
     setSelectedCategory('All')
   }, [selectedCategoryTab])
+
+  useEffect(() => {
+    getAllCategories()
+      .then((data) => {
+        setCategoryNames(data.filter((item) => item.isActive).map((item) => item.name))
+      })
+      .catch(() => {
+        setCategoryNames([])
+      })
+  }, [])
+
+  useEffect(() => {
+    getAllDistributors()
+      .then((data) => {
+        setDealers(data)
+      })
+      .catch(() => {
+        setDealers([])
+      })
+  }, [])
 
   const currentSlide = slides[activeSlide]
   const prevSlide = () =>
@@ -216,6 +240,7 @@ export function HomePage() {
       </div>
 
       <CategoryShowcase
+        categories={categoryNames}
         selectedTab={selectedCategoryTab}
         onTabChange={setSelectedCategoryTab}
         onSelectProductCategory={setSelectedCategory}
@@ -278,7 +303,6 @@ export function HomePage() {
               key={dealer.id}
               dealer={dealer}
               badgeLabel="Mankind Store"
-              showFocus={false}
             />
           ))}
         </div>

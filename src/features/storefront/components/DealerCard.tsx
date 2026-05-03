@@ -1,15 +1,22 @@
-import type { Dealer } from '../data/dealers'
+export type Dealer = {
+  id: string | number
+  name: string
+  country?: string
+  city: string
+  state: string
+  address: string
+  phone: string
+  email: string
+}
 
 type DealerCardProps = {
   dealer: Dealer
   badgeLabel?: string
-  showFocus?: boolean
 }
 
 export function DealerCard({
   dealer,
   badgeLabel = 'Mankind Dealer',
-  showFocus = true,
 }: DealerCardProps) {
   return (
     <article className="group rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-brand-green/30">
@@ -22,6 +29,7 @@ export function DealerCard({
       </h3>
       <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-brand-green">
         {dealer.city}, {dealer.state}
+        {dealer.country ? `, ${dealer.country}` : ''}
       </p>
       <p className="mt-2 min-h-12 text-sm leading-6 text-slate-600">{dealer.address}</p>
 
@@ -44,20 +52,7 @@ export function DealerCard({
             </a>
           </span>
         </p>
-        <p className="flex items-start gap-2 text-slate-700">
-          <ClockIcon />
-          <span>
-            <span className="font-semibold text-brand-ink">Hours:</span>{' '}
-            {dealer.supportHours}
-          </span>
-        </p>
       </div>
-
-      {showFocus && (
-        <p className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-medium text-slate-600">
-          {dealer.focus}
-        </p>
-      )}
 
       <div className="mt-5 flex gap-2">
         <a
@@ -112,20 +107,3 @@ function MailIcon() {
   )
 }
 
-function ClockIcon() {
-  return (
-    <svg
-      className="mt-0.5 h-4 w-4 shrink-0 text-brand-green"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  )
-}

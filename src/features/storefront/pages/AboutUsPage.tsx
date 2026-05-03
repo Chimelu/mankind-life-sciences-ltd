@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
+import { getAllDistributors } from '../../../api/distributors.api'
 import { DealerCard } from '../components/DealerCard'
-import { dealers } from '../data/dealers'
+import type { Dealer } from '../components/DealerCard'
 
 const aboutGalleryImages = [
   '/WhatsApp Image 2026-04-23 at 17.48.12.jpeg',
@@ -9,6 +11,18 @@ const aboutGalleryImages = [
 ]
 
 export function AboutUsPage() {
+  const [dealers, setDealers] = useState<Dealer[]>([])
+
+  useEffect(() => {
+    getAllDistributors()
+      .then((data) => {
+        setDealers(data)
+      })
+      .catch(() => {
+        setDealers([])
+      })
+  }, [])
+
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5 md:py-10">
       <div className="rounded-3xl bg-white px-6 py-10 md:px-10">

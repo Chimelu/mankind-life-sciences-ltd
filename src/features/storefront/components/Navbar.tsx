@@ -3,10 +3,12 @@ import { useAuth } from '../../../app/auth/AuthContext'
 import { navLinks } from '../data/navigation'
 import { catalogProducts } from '../data/catalogProducts'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useStorefront } from '../state/StorefrontContext'
 
 export function Navbar() {
   const navigate = useNavigate()
   const { isSignedIn, signOut, user } = useAuth()
+  const { cartItems, favouriteIds } = useStorefront()
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false)
   const [isProfilePinned, setIsProfilePinned] = useState(false)
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
@@ -109,7 +111,7 @@ export function Navbar() {
           >
             <CartIcon />
             <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold text-white">
-              3
+              {cartItems.length}
             </span>
           </Link>
           <Link
@@ -119,7 +121,7 @@ export function Navbar() {
           >
             <HeartIcon />
             <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-red text-[10px] font-bold text-white">
-              4
+              {favouriteIds.length}
             </span>
           </Link>
           {isSignedIn ? (

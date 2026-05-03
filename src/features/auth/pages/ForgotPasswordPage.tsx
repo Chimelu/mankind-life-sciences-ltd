@@ -1,13 +1,25 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { sendPasswordResetOtp } from '../../../api/auth.api'
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    navigate(`/auth/otp?email=${encodeURIComponent(email)}`)
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await sendPasswordResetOtp(email)
+      navigate(`/auth/otp?flow=reset&email=${encodeURIComponent(email)}`)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Failed to send OTP')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -30,11 +42,13 @@ export function ForgotPasswordPage() {
           />
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full rounded-full bg-brand-green py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Send code
+            {isSubmitting ? 'Sending...' : 'Send code'}
           </button>
         </form>
+        {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
 
         <p className="mt-4 text-center text-sm">
           <Link to="/auth/sign-in" className="font-semibold text-brand-green hover:underline">

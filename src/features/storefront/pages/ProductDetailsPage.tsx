@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ProductCard } from '../components/ProductCard'
 import { catalogProducts } from '../data/catalogProducts'
+import { useStorefront } from '../state/StorefrontContext'
 
 const reviews = [
   {
@@ -32,6 +33,7 @@ export function ProductDetailsPage() {
   const [isZoomed, setIsZoomed] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
+  const { addToCart, addToFavourites, isFavourite } = useStorefront()
 
   const relatedProducts = useMemo(() => {
     if (!product) return []
@@ -218,8 +220,23 @@ export function ProductDetailsPage() {
               <button className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white">
                 Buy now
               </button>
-              <button className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-white">
+              <button
+                type="button"
+                onClick={() => addToCart(product, quantity)}
+                className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-white"
+              >
                 Add to cart
+              </button>
+              <button
+                type="button"
+                onClick={() => addToFavourites(product.id)}
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold ${
+                  isFavourite(product.id)
+                    ? 'bg-brand-red text-white'
+                    : 'border border-slate-300 text-slate-700'
+                }`}
+              >
+                {isFavourite(product.id) ? 'Saved' : 'Add to favourites'}
               </button>
             </div>
           </div>

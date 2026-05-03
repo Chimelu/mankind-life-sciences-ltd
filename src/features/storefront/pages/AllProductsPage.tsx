@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getAllCategories } from '../../../api/categories.api'
 import { ProductCard } from '../components/ProductCard'
 import {
   catalogProducts,
@@ -11,11 +12,21 @@ const filterGroups: ProductGroup[] = ['Drugs', 'Non-Drugs', 'Laboratory Tests']
 export function AllProductsPage() {
   const [selectedGroup, setSelectedGroup] = useState<ProductGroup>('Drugs')
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedBrand, setSelectedBrand] = useState('All')
   const [sortBy, setSortBy] = useState<SortBy>('latest')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [apiCategories, setApiCategories] = useState<string[]>([])
+
+  useEffect(() => {
+    getAllCategories()
+      .then((data) => {
+        setApiCategories(data.filter((item) => item.isActive).map((item) => item.name))
+      })
+      .catch(() => {
+        setApiCategories([])
+      })
+  }, [])
 
   const productsByGroup = useMemo(
     () => catalogProducts.filter((item) => item.group === selectedGroup),
@@ -23,17 +34,11 @@ export function AllProductsPage() {
   )
 
   const availableCategories = useMemo(() => {
-    const unique = Array.from(new Set(productsByGroup.map((item) => item.category)))
-    return ['All', ...unique]
-  }, [productsByGroup])
-
-  const brandCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const product of productsByGroup) {
-      counts.set(product.brand, (counts.get(product.brand) ?? 0) + 1)
-    }
-    return counts
-  }, [productsByGroup])
+    const categories = apiCategories.length
+      ? apiCategories
+      : Array.from(new Set(productsByGroup.map((item) => item.category)))
+    return ['All', ...categories]
+  }, [apiCategories, productsByGroup])
 
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice || 0)
@@ -41,16 +46,15 @@ export function AllProductsPage() {
 
     const filtered = productsByGroup.filter((item) => {
       const categoryOk = selectedCategory === 'All' || item.category === selectedCategory
-      const brandOk = selectedBrand === 'All' || item.brand === selectedBrand
       const priceOk = item.price >= min && item.price <= max
-      return categoryOk && brandOk && priceOk
+      return categoryOk && priceOk
     })
 
     if (sortBy === 'price-asc') return [...filtered].sort((a, b) => a.price - b.price)
     if (sortBy === 'price-desc') return [...filtered].sort((a, b) => b.price - a.price)
     if (sortBy === 'name-asc') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
     return [...filtered].sort((a, b) => b.id - a.id)
-  }, [productsByGroup, selectedCategory, selectedBrand, minPrice, maxPrice, sortBy])
+  }, [productsByGroup, selectedCategory, minPrice, maxPrice, sortBy])
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5">
@@ -99,10 +103,6 @@ export function AllProductsPage() {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             availableCategories={availableCategories}
-            selectedBrand={selectedBrand}
-            setSelectedBrand={setSelectedBrand}
-            brandCounts={brandCounts}
-            productsByGroupLength={productsByGroup.length}
             minPrice={minPrice}
             setMinPrice={setMinPrice}
             maxPrice={maxPrice}
@@ -113,7 +113,7 @@ export function AllProductsPage() {
         <div className="flex-1">
           {filteredProducts.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-              No products found for this filter. Try another category, brand,
+              No products found for this filter. Try another category,
               or price range.
             </div>
           ) : (
@@ -149,10 +149,6 @@ export function AllProductsPage() {
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               availableCategories={availableCategories}
-              selectedBrand={selectedBrand}
-              setSelectedBrand={setSelectedBrand}
-              brandCounts={brandCounts}
-              productsByGroupLength={productsByGroup.length}
               minPrice={minPrice}
               setMinPrice={setMinPrice}
               maxPrice={maxPrice}
@@ -177,10 +173,6 @@ type FilterPanelProps = {
   selectedCategory: string
   setSelectedCategory: (category: string) => void
   availableCategories: string[]
-  selectedBrand: string
-  setSelectedBrand: (brand: string) => void
-  brandCounts: Map<string, number>
-  productsByGroupLength: number
   minPrice: string
   setMinPrice: (value: string) => void
   maxPrice: string
@@ -193,10 +185,6 @@ function FilterPanel({
   selectedCategory,
   setSelectedCategory,
   availableCategories,
-  selectedBrand,
-  setSelectedBrand,
-  brandCounts,
-  productsByGroupLength,
   minPrice,
   setMinPrice,
   maxPrice,
@@ -213,7 +201,6 @@ function FilterPanel({
           onChange={(event) => {
             setSelectedGroup(event.target.value as ProductGroup)
             setSelectedCategory('All')
-            setSelectedBrand('All')
           }}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-green"
         >
@@ -240,37 +227,6 @@ function FilterPanel({
             >
               <span>{category}</span>
               <span aria-hidden="true">›</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-5 border-t border-slate-200 pt-4">
-        <p className="text-sm font-semibold text-slate-700">Brands</p>
-        <div className="mt-3 space-y-2">
-          <button
-            onClick={() => setSelectedBrand('All')}
-            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition ${
-              selectedBrand === 'All'
-                ? 'bg-brand-green/10 font-semibold text-brand-green'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <span>All Brands</span>
-            <span>{productsByGroupLength}</span>
-          </button>
-          {Array.from(brandCounts.entries()).map(([brand, count]) => (
-            <button
-              key={brand}
-              onClick={() => setSelectedBrand(brand)}
-              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm transition ${
-                selectedBrand === brand
-                  ? 'bg-brand-green/10 font-semibold text-brand-green'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>{brand}</span>
-              <span>{count}</span>
             </button>
           ))}
         </div>

@@ -1,15 +1,49 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  sendPasswordResetOtp,
+  sendRegistrationOtp,
+  verifyPasswordResetOtp,
+  verifyRegistrationOtp,
+} from '../../../api/auth.api'
 
 export function OtpPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') ?? ''
+  const flow = searchParams.get('flow') ?? 'reset'
   const [otp, setOtp] = useState('')
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    navigate(`/auth/reset-password?email=${encodeURIComponent(email)}`)
+    setError('')
+    setNotice('')
+
+    if (flow === 'register') {
+      setIsSubmitting(true)
+      try {
+        await verifyRegistrationOtp({ email, otp })
+        navigate('/auth/sign-in?registered=1')
+      } catch (requestError) {
+        setError(requestError instanceof Error ? requestError.message : 'OTP verification failed')
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await verifyPasswordResetOtp({ email, otp })
+      navigate(`/auth/reset-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'OTP verification failed')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -32,16 +66,41 @@ export function OtpPage() {
           />
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full rounded-full bg-brand-green py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Verify code
+            {isSubmitting ? 'Verifying...' : 'Verify code'}
           </button>
         </form>
+        {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+        {notice && <p className="mt-3 text-sm font-medium text-brand-green">{notice}</p>}
 
         <div className="mt-4 flex items-center justify-between text-sm">
-          <Link to="/auth/forgot-password" className="font-semibold text-brand-green hover:underline">
+          <button
+            type="button"
+            onClick={async () => {
+              if (flow === 'register') {
+                try {
+                  await sendRegistrationOtp(email)
+                  setNotice('OTP resent to your email.')
+                  setError('')
+                } catch (requestError) {
+                  setError(requestError instanceof Error ? requestError.message : 'Failed to resend OTP')
+                }
+                return
+              }
+              try {
+                await sendPasswordResetOtp(email)
+                setNotice('OTP resent to your email.')
+                setError('')
+              } catch (requestError) {
+                setError(requestError instanceof Error ? requestError.message : 'Failed to resend OTP')
+              }
+            }}
+            className="font-semibold text-brand-green hover:underline"
+          >
             Resend code
-          </Link>
+          </button>
           <Link to="/auth/sign-in" className="font-semibold text-slate-600 hover:text-brand-green">
             Back to sign in
           </Link>

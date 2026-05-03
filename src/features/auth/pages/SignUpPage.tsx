@@ -1,23 +1,44 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { registerUser, sendRegistrationOtp } from '../../../api/auth.api'
 
 export function SignUpPage() {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [cac, setCac] = useState('')
+  const [address, setAddress] = useState('')
   const [email, setEmail] = useState('')
-  const [organization, setOrganization] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (password !== confirmPassword) {
       setError('Passwords do not match.')
       return
     }
     setError('')
-    navigate(`/auth/otp?email=${encodeURIComponent(email)}`)
+    setIsSubmitting(true)
+
+    try {
+      await registerUser({
+        fullName,
+        companyName,
+        cac,
+        address,
+        email,
+        password,
+      })
+      await sendRegistrationOtp(email)
+      navigate(`/auth/otp?flow=register&email=${encodeURIComponent(email)}`)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Registration failed')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -30,9 +51,30 @@ export function SignUpPage() {
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <input
             required
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
             placeholder="Full name"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
+          />
+          <input
+            required
+            value={companyName}
+            onChange={(event) => setCompanyName(event.target.value)}
+            placeholder="Company name"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
+          />
+          <input
+            required
+            value={cac}
+            onChange={(event) => setCac(event.target.value)}
+            placeholder="CAC number"
+            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
+          />
+          <input
+            required
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            placeholder="Address"
             className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
           />
           <input
@@ -41,13 +83,6 @@ export function SignUpPage() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email address"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
-          />
-          <input
-            required
-            value={organization}
-            onChange={(event) => setOrganization(event.target.value)}
-            placeholder="Pharmacy / Organization"
             className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-brand-green"
           />
           <input
@@ -71,9 +106,10 @@ export function SignUpPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full rounded-full bg-brand-green py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Create account
+            {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 

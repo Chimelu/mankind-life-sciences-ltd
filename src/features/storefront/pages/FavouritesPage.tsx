@@ -1,25 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { catalogProducts } from '../data/catalogProducts'
+import { useStorefront } from '../state/StorefrontContext'
 
 export function FavouritesPage() {
-  const [favouriteIds, setFavouriteIds] = useState<number[]>([101, 103, 107, 110])
-  const [addedToCartIds, setAddedToCartIds] = useState<number[]>([])
+  const { favouriteIds, cartItems, addToCart, removeFromFavourites } = useStorefront()
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
   const favouriteProducts = useMemo(
     () => catalogProducts.filter((product) => favouriteIds.includes(product.id)),
     [favouriteIds],
   )
-
-  const removeFavourite = (productId: number) => {
-    setFavouriteIds((prev) => prev.filter((id) => id !== productId))
-    setAddedToCartIds((prev) => prev.filter((id) => id !== productId))
-  }
-
-  const addToCart = (productId: number) => {
-    setAddedToCartIds((prev) => (prev.includes(productId) ? prev : [...prev, productId]))
-  }
+  const addedToCartIds = useMemo(() => cartItems.map((item) => item.id), [cartItems])
 
   const pendingDeleteProduct = favouriteProducts.find(
     (product) => product.id === pendingDeleteId,
@@ -102,7 +94,7 @@ export function FavouritesPage() {
               <div className="mt-2.5 flex items-center gap-1.5 sm:mt-3 sm:gap-2">
                 <button
                   type="button"
-                  onClick={() => addToCart(product.id)}
+                  onClick={() => addToCart(product)}
                   className={`inline-flex min-h-9 flex-1 items-center justify-center rounded-full px-2.5 py-2 text-[11px] font-semibold transition active:scale-[0.98] sm:min-h-10 sm:px-3 sm:text-xs ${
                     addedToCartIds.includes(product.id)
                       ? 'bg-brand-green text-white'
@@ -152,7 +144,7 @@ export function FavouritesPage() {
                 type="button"
                 onClick={() => {
                   if (pendingDeleteId !== null) {
-                    removeFavourite(pendingDeleteId)
+                    void removeFromFavourites(pendingDeleteId)
                   }
                   setPendingDeleteId(null)
                 }}

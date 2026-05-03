@@ -1,21 +1,43 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { loginUser } from '../../../api/auth.api'
 import { useAuth } from '../../../app/auth/AuthContext'
 
 export function SignInPage() {
   const navigate = useNavigate()
-  const { signInDemo } = useAuth()
+  const { updateUser } = useAuth()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isRegisteredNotice = searchParams.get('registered') === '1'
   const isResetNotice = searchParams.get('reset') === '1'
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    signInDemo()
-    navigate('/dashboard/profile')
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      const result = await loginUser({ email, password })
+      if (result.otpRequired || !result.token) {
+        navigate(`/auth/otp?flow=register&email=${encodeURIComponent(email)}`)
+        return
+      }
+      window.localStorage.setItem('mankind-auth-token', result.token)
+      updateUser({
+        name: result.user.fullName,
+        email: result.user.email,
+        organization: result.user.companyName,
+      })
+      navigate('/dashboard/profile')
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Login failed')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -76,9 +98,10 @@ export function SignInPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full rounded-full bg-brand-green py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Sign in
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
           <button
             type="button"
@@ -88,6 +111,7 @@ export function SignInPage() {
             Continue as guest
           </button>
         </form>
+        {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
 
         <p className="mt-4 text-center text-sm text-slate-600">
           New here?{' '}
