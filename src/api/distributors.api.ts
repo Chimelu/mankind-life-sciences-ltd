@@ -9,7 +9,7 @@ export type DistributorApiDto = {
   address: string
   phone: string
   email: string
-}
+}  
 
 export function getAllDistributors() {
   return apiGet<DistributorApiDto[]>('/distributors')
