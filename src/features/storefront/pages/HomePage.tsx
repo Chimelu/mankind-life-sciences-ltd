@@ -105,9 +105,6 @@ export function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [categoryNames, setCategoryNames] = useState<string[]>([])
   const [dealers, setDealers] = useState<Dealer[]>([])
-  const [selectedCategoryTab, setSelectedCategoryTab] = useState<
-    'Drugs Category' | 'Non-Drugs Category' | 'Laboratory Tests Category'
-  >('Drugs Category')
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -129,10 +126,6 @@ export function HomePage() {
       mounted = false
     }
   }, [])
-
-  useEffect(() => {
-    setSelectedCategory('All')
-  }, [selectedCategoryTab])
 
   useEffect(() => {
     getAllCategories()
@@ -241,8 +234,6 @@ export function HomePage() {
 
       <CategoryShowcase
         categories={categoryNames}
-        selectedTab={selectedCategoryTab}
-        onTabChange={setSelectedCategoryTab}
         onSelectProductCategory={setSelectedCategory}
       />
 

@@ -33,7 +33,7 @@ export function ProductDetailsPage() {
   const [isZoomed, setIsZoomed] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
-  const { addToCart, addToFavourites, isFavourite } = useStorefront()
+  const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
 
   const relatedProducts = useMemo(() => {
     if (!product) return []
@@ -223,9 +223,9 @@ export function ProductDetailsPage() {
               <button
                 type="button"
                 onClick={() => addToCart(product, quantity)}
-                className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-white"
+                className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-white active:scale-[0.98]"
               >
-                Add to cart
+                {isInCart(product.id) ? 'Added to cart' : 'Add to cart'}
               </button>
               <button
                 type="button"

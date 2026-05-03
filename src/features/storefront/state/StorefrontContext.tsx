@@ -32,6 +32,7 @@ type StorefrontContextValue = {
   ) => void
   setCartItemQuantity: (id: number, quantity: number) => void
   removeFromCart: (id: number) => void
+  isInCart: (productId: number) => boolean
   addToFavourites: (productId: number) => Promise<void>
   removeFromFavourites: (productId: number) => Promise<void>
   isFavourite: (productId: number) => boolean
@@ -174,6 +175,8 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
       addToCart,
       setCartItemQuantity,
       removeFromCart,
+      isInCart: (productId: number) =>
+        cartItems.some((item) => item.id === productId),
       addToFavourites,
       removeFromFavourites,
       isFavourite: (productId: number) => favouriteIds.includes(productId),

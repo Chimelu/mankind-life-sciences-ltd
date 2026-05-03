@@ -1,140 +1,38 @@
-type CategoryTab = 'Drugs Category' | 'Non-Drugs Category' | 'Laboratory Tests Category'
-
 type CategoryItem = {
   name: string
-  group: CategoryTab
   accent: string
   icon: string
   productCategory: string
 }
 
-const categoryItems: CategoryItem[] = [
-  {
-    name: 'Vitamins and Supplements',
-    group: 'Drugs Category',
-    accent: 'bg-green-100 text-green-600',
-    icon: 'V',
-    productCategory: 'Vitamins',
-  },
-  {
-    name: 'Antimalaria',
-    group: 'Drugs Category',
-    accent: 'bg-rose-100 text-rose-600',
-    icon: 'A',
-    productCategory: 'Tablets',
-  },
-  {
-    name: 'Pain Relievers',
-    group: 'Drugs Category',
-    accent: 'bg-slate-100 text-slate-700',
-    icon: 'P',
-    productCategory: 'Pain Relief',
-  },
-  {
-    name: 'Anti-asthma',
-    group: 'Drugs Category',
-    accent: 'bg-violet-100 text-violet-600',
-    icon: 'S',
-    productCategory: 'Syrups',
-  },
-  {
-    name: 'Personal Care',
-    group: 'Non-Drugs Category',
-    accent: 'bg-amber-100 text-amber-600',
-    icon: 'C',
-    productCategory: 'All',
-  },
-  {
-    name: 'Baby Care',
-    group: 'Non-Drugs Category',
-    accent: 'bg-cyan-100 text-cyan-600',
-    icon: 'B',
-    productCategory: 'All',
-  },
-  {
-    name: 'Medical Devices',
-    group: 'Non-Drugs Category',
-    accent: 'bg-indigo-100 text-indigo-600',
-    icon: 'M',
-    productCategory: 'All',
-  },
-  {
-    name: 'Diagnostics',
-    group: 'Laboratory Tests Category',
-    accent: 'bg-emerald-100 text-emerald-700',
-    icon: 'D',
-    productCategory: 'All',
-  },
-]
-
 type CategoryShowcaseProps = {
   categories?: string[]
-  selectedTab: CategoryTab
-  onTabChange: (tab: CategoryTab) => void
   onSelectProductCategory: (category: string) => void
 }
 
 export function CategoryShowcase({
   categories = [],
-  selectedTab,
-  onTabChange,
   onSelectProductCategory,
 }: CategoryShowcaseProps) {
-  const tabs: CategoryTab[] = [
-    'Drugs Category',
-    'Non-Drugs Category',
-    'Laboratory Tests Category',
-  ]
-
-  const dynamicItems: CategoryItem[] =
-    categories.length > 0
-      ? categories.map((name, index) => {
-          const groups: CategoryTab[] = [
-            'Drugs Category',
-            'Non-Drugs Category',
-            'Laboratory Tests Category',
-          ]
-          const accents = [
-            'bg-green-100 text-green-600',
-            'bg-rose-100 text-rose-600',
-            'bg-cyan-100 text-cyan-600',
-            'bg-indigo-100 text-indigo-600',
-            'bg-amber-100 text-amber-600',
-          ]
-          return {
-            name,
-            group: groups[index % groups.length],
-            accent: accents[index % accents.length],
-            icon: name.slice(0, 1).toUpperCase(),
-            productCategory: name,
-          }
-        })
-      : categoryItems
-
-  const visibleItems = dynamicItems.filter((item) => item.group === selectedTab)
+  const visibleItems: CategoryItem[] = categories.map((name, index) => {
+    const accents = [
+      'bg-green-100 text-green-600',
+      'bg-rose-100 text-rose-600',
+      'bg-cyan-100 text-cyan-600',
+      'bg-indigo-100 text-indigo-600',
+      'bg-amber-100 text-amber-600',
+    ]
+    return {
+      name,
+      accent: accents[index % accents.length],
+      icon: name.slice(0, 1).toUpperCase(),
+      productCategory: name,
+    }
+  })
 
   return (
     <section className="mt-8 p-1">
-      <div className="flex flex-wrap gap-6 border-b border-slate-200 px-1 pb-3">
-        {tabs.map((tab) => {
-          const isActive = tab === selectedTab
-          return (
-            <button
-              key={tab}
-              onClick={() => onTabChange(tab)}
-              className={`pb-2 text-sm font-medium transition ${
-                isActive
-                  ? 'border-b-2 border-brand-red text-brand-red'
-                  : 'text-slate-500 hover:text-brand-green'
-              }`}
-            >
-              {tab}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-1 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {visibleItems.map((item) => (
           <article
             key={item.name}

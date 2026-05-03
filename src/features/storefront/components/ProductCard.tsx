@@ -14,7 +14,7 @@ type ProductCardProps = {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart, addToFavourites, isFavourite } = useStorefront()
+  const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
 
   return (
     <article className="rounded-2xl bg-white p-2.5 transition hover:shadow-sm">
@@ -41,10 +41,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           type="button"
           onClick={() => addToCart(product)}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-brand-red px-3.5 text-sm font-medium text-white transition hover:opacity-90"
+          className={`inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-semibold text-white transition active:scale-[0.98] sm:px-3.5 sm:text-sm ${
+            isInCart(product.id)
+              ? 'bg-brand-green hover:opacity-95'
+              : 'bg-brand-red hover:opacity-90'
+          }`}
         >
           <MiniCartIcon />
-          <span>Add to cart</span>
+          <span>{isInCart(product.id) ? 'Added to cart' : 'Add to cart'}</span>
         </button>
         <button
           type="button"
