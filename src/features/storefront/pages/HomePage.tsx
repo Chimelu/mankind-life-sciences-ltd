@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getAllCategories, type StoreCategory } from '../../../api/categories.api'
 import { getAllDistributors } from '../../../api/distributors.api'
 import { getProducts, type StoreProductItem } from '../../../api/products.api'
@@ -13,16 +14,18 @@ const slides = [
     title: 'We Are Active in Pharmaceutical Imports and Distribution',
     subtitle:
       'We supply approved pharmaceutical products through trusted import channels and structured distribution networks for hospitals, pharmacies, and dealers.',
-    cta: 'Explore distribution network',
-    tone: 'bg-[#d8f0dd]',
+    cta: 'Start bulk ordering',
+    tone: 'linear-gradient(135deg, rgba(216, 240, 221, 0.9), rgba(216, 240, 221, 0.72))',
+    image: '/hero/slide-1.png',
   },
   {
     eyebrow: 'Manufacturing roadmap and quality systems',
     title: 'Advancing Toward Scalable Local Manufacturing',
     subtitle:
       'As we expand into manufacturing, we are strengthening quality systems, operations, and compliance structures for reliable long-term production.',
-    cta: 'View manufacturing roadmap',
-    tone: 'bg-[#e6f4ff]',
+    cta: 'Start bulk ordering',
+    tone: 'linear-gradient(135deg, rgba(230, 244, 255, 0.9), rgba(230, 244, 255, 0.72))',
+    image: '/hero/slide-2.png',
   },
   {
     eyebrow: 'Bulk orders and transparent fulfillment',
@@ -30,11 +33,13 @@ const slides = [
     subtitle:
       'From factory dispatch to dealer destination, monitor bulk order progress with clear status updates and professional support.',
     cta: 'Start bulk ordering',
-    tone: 'bg-[#fff1f2]',
+    tone: 'linear-gradient(135deg, rgba(255, 241, 242, 0.9), rgba(255, 241, 242, 0.72))',
+    image: '/hero/slide-3.png',
   },
 ]
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [activeSlide, setActiveSlide] = useState(0)
   const [mostPopularProducts, setMostPopularProducts] = useState<Product[]>([])
   const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({})
@@ -133,7 +138,22 @@ export function HomePage() {
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-6 md:px-5">
-      <div className={`relative overflow-hidden rounded-3xl p-5 md:p-7 ${currentSlide.tone}`}>
+      <div
+        className="relative overflow-hidden rounded-3xl p-4 md:px-6 md:py-5 lg:px-6 lg:py-4"
+        style={{
+          backgroundImage: currentSlide.tone,
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 z-0 lg:hidden"
+          style={{
+            backgroundImage: `linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62)), url(${currentSlide.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+          aria-hidden="true"
+        />
         <button
           onClick={prevSlide}
           className="absolute left-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white md:block"
@@ -149,36 +169,37 @@ export function HomePage() {
           <ChevronRightIcon />
         </button>
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr,1fr] lg:items-center">
-          <div>
+        <div className="relative z-10 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_470px] lg:items-center">
+          <div className="max-w-[620px] lg:justify-self-start lg:pl-12">
             <p className="mb-3 inline-flex rounded-full border border-brand-green/20 bg-white/70 px-3 py-1 text-xs font-medium text-brand-green md:text-sm">
               {currentSlide.eyebrow}
             </p>
-            <h1 className="max-w-2xl text-3xl font-semibold leading-[1.08] text-slate-950 md:text-5xl">
+            <h1 className="text-3xl font-semibold leading-[1.08] text-slate-950 md:text-4xl lg:text-[2.2rem]">
               {currentSlide.title}
             </h1>
-            <p className="mt-3 max-w-2xl text-base text-slate-700 md:text-lg">
+            <p className="mt-3 text-base text-slate-700 lg:text-[1rem]">
               {currentSlide.subtitle}
             </p>
-            <button className="mt-5 rounded-full bg-brand-red px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 md:text-base">
+            <button
+              onClick={() => navigate('/products')}
+              className="mt-5 rounded-full bg-brand-red px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 md:text-base"
+            >
               {currentSlide.cta}
             </button>
           </div>
 
-          <div className="relative hidden h-[250px] lg:block">
-            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-brand-red/15" />
-            <div className="absolute right-10 top-14 h-44 w-44 rounded-full bg-brand-green/20" />
-            <div className="absolute right-20 top-24 h-40 w-40 rounded-full bg-brand-blue/15" />
-            {/* <div className="absolute bottom-1 left-2 rounded-2xl bg-white px-6 py-4 shadow-md">
-              <p className="text-sm font-medium text-brand-muted">Mankind care</p>
-              <p className="text-lg font-semibold text-brand-ink">
-                The company is powered by professionals in Pharmaceuticals, Medicine, optometry, Statistics and management.
-              </p>
-            </div> */}
+          <div className="hidden items-center justify-end lg:flex">
+            <div className="w-full max-w-[470px] pr-10">
+              <img
+                src={currentSlide.image}
+                alt="Featured bulk order product"
+                className="h-[260px] w-full rounded-[26px] bg-white/20 p-1 object-contain object-center"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="mt-7 flex items-center justify-center gap-2">
+        <div className="relative z-10 mt-2 flex items-center justify-center gap-2">
           {slides.map((slide, index) => (
             <button
               key={slide.title}
