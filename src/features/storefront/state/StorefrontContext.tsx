@@ -129,7 +129,6 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
     })
 
     toast.success(`Added ${safeQuantity} ${safeQuantity > 1 ? 'items' : 'item'} of ${product.name} to cart`, {
-      icon: '🛒',
       style: {
         borderRadius: '0.75rem',
       },
