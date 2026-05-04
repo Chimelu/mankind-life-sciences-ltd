@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ProductCard } from '../components/ProductCard'
-import { catalogProducts } from '../data/catalogProducts'
+import { getProductById, getProducts } from '../../../api/products.api'
+import { ProductCard, type Product } from '../components/ProductCard'
 import { useStorefront } from '../state/StorefrontContext'
 
 const reviews = [
@@ -27,7 +27,9 @@ const reviews = [
 
 export function ProductDetailsPage() {
   const { productId } = useParams()
-  const product = catalogProducts.find((item) => String(item.id) === productId)
+  const [product, setProduct] = useState<Product | null>(null)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [loadingProduct, setLoadingProduct] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [isZoomed, setIsZoomed] = useState(false)
@@ -35,12 +37,53 @@ export function ProductDetailsPage() {
   const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
   const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
 
-  const relatedProducts = useMemo(() => {
-    if (!product) return []
-    return catalogProducts
-      .filter((item) => item.id !== product.id && item.group === product.group)
-      .slice(0, 4)
-  }, [product])
+  useEffect(() => {
+    if (!productId) {
+      setLoadingProduct(false)
+      return
+    }
+
+    let mounted = true
+    setLoadingProduct(true)
+
+    getProductById(productId)
+      .then(async (item) => {
+        if (!mounted) return
+        const mapped = toStorefrontProduct(item, 0)
+        setProduct(mapped)
+
+        const relatedResponse = await getProducts({
+          categoryId: item.categoryId,
+          page: 1,
+          limit: 4,
+        })
+        if (!mounted) return
+
+        setRelatedProducts(
+          relatedResponse.items
+            .filter((relatedItem) => relatedItem.id !== item.id)
+            .map((relatedItem, index) => toStorefrontProduct(relatedItem, index)),
+        )
+      })
+      .catch(() => {
+        if (!mounted) return
+        setProduct(null)
+        setRelatedProducts([])
+      })
+      .finally(() => {
+        if (mounted) setLoadingProduct(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [productId])
+
+  const totalPrice = useMemo(() => (product ? product.price * quantity : 0), [product, quantity])
+
+  if (loadingProduct) {
+    return <ProductDetailsSkeleton />
+  }
 
   if (!product) {
     return (
@@ -61,7 +104,6 @@ export function ProductDetailsPage() {
     )
   }
 
-  const totalPrice = product.price * quantity
   const productUrl =
     typeof window !== 'undefined'
       ? window.location.href
@@ -161,7 +203,7 @@ export function ProductDetailsPage() {
             </span>
           </div>
 
-          <p className="mt-4 text-slate-600">{product.description}</p>
+          <p className="mt-4 text-slate-600">{product.description ?? `${product.name} product details`}</p>
 
           <div className="mt-5 space-y-2 text-sm text-slate-700">
             <p>
@@ -170,15 +212,15 @@ export function ProductDetailsPage() {
             </p>
             <p>
               <span className="font-semibold text-slate-900">Brand:</span>{' '}
-              {product.brand}
+              {product.brand ?? 'Mankind'}
             </p>
             <p>
               <span className="font-semibold text-slate-900">Pack size:</span>{' '}
-              {product.packSize}
+              {product.packSize ?? '1 pack'}
             </p>
             <p>
               <span className="font-semibold text-slate-900">Manufacturer:</span>{' '}
-              {product.manufacturer}
+              {product.manufacturer ?? 'Mankind Life Sciences'}
             </p>
           </div>
 
@@ -273,7 +315,7 @@ export function ProductDetailsPage() {
 
         {activeInfoTab === 'description' ? (
           <div className="mt-4 text-sm leading-7 text-slate-700">
-            <p>{product.description}</p>
+            <p>{product.description ?? `${product.name} product details`}</p>
             <p className="mt-3">
               This product is supplied through our quality-controlled import and distribution
               channels, with professional support for pharmacies, clinics, and wholesale buyers.
@@ -341,5 +383,57 @@ function ShareIcon() {
       <path d="M8.6 13.4 15.4 17.6" />
       <path d="M15.4 6.4 8.6 10.6" />
     </svg>
+  )
+}
+
+function toStorefrontProduct(
+  item: Awaited<ReturnType<typeof getProductById>>,
+  seed: number,
+): Product {
+  return {
+    id: toStableNumberId(item.id, seed),
+    routeId: item.id,
+    name: item.name,
+    description: item.description,
+    category: item.category?.name ?? 'General',
+    brand: item.brand,
+    packSize: item.packSize,
+    manufacturer: item.manufacturer,
+    price: Number(item.price),
+    image: item.imageUrl,
+  }
+}
+
+function toStableNumberId(value: string, seed = 0) {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index)
+    hash |= 0
+  }
+
+  return Math.abs(hash + seed) || seed + 1
+}
+
+function ProductDetailsSkeleton() {
+  return (
+    <section className="mx-auto w-full max-w-[96rem] animate-pulse px-3 py-8 md:px-5">
+      <div className="h-4 w-56 rounded bg-slate-200" />
+      <div className="mt-4 grid gap-8 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-[1fr,1.1fr] md:p-8">
+        <div>
+          <div className="h-[360px] rounded-2xl bg-slate-200" />
+          <div className="mt-3 flex gap-2">
+            <div className="h-16 w-16 rounded-xl bg-slate-200" />
+            <div className="h-16 w-16 rounded-xl bg-slate-200" />
+          </div>
+        </div>
+        <div>
+          <div className="h-4 w-40 rounded bg-slate-200" />
+          <div className="mt-3 h-10 w-4/5 rounded bg-slate-200" />
+          <div className="mt-3 h-4 w-1/2 rounded bg-slate-200" />
+          <div className="mt-4 h-20 w-full rounded bg-slate-200" />
+          <div className="mt-6 h-40 w-full rounded-2xl bg-slate-200" />
+        </div>
+      </div>
+    </section>
   )
 }

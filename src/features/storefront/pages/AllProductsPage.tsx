@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAllCategories } from '../../../api/categories.api'
+import { getAllCategories, type StoreCategory } from '../../../api/categories.api'
+import { getProducts, type StoreProductItem } from '../../../api/products.api'
 import { ProductCard } from '../components/ProductCard'
-import {
-  catalogProducts,
-  type ProductGroup,
-} from '../data/catalogProducts'
+import type { ProductGroup } from '../data/catalogProducts'
 type SortBy = 'latest' | 'price-asc' | 'price-desc' | 'name-asc'
 
 const filterGroups: ProductGroup[] = ['Drugs', 'Non-Drugs', 'Laboratory Tests']
@@ -16,45 +14,62 @@ export function AllProductsPage() {
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
-  const [apiCategories, setApiCategories] = useState<string[]>([])
+  const [categories, setCategories] = useState<StoreCategory[]>([])
+  const [products, setProducts] = useState<ReturnType<typeof toStorefrontProduct>[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
 
   useEffect(() => {
     getAllCategories()
       .then((data) => {
-        setApiCategories(data.filter((item) => item.isActive).map((item) => item.name))
+        setCategories(data.filter((item) => item.isActive))
       })
       .catch(() => {
-        setApiCategories([])
+        setCategories([])
       })
   }, [])
 
-  const productsByGroup = useMemo(
-    () => catalogProducts.filter((item) => item.group === selectedGroup),
-    [selectedGroup],
-  )
+  useEffect(() => {
+    let mounted = true
+    setLoadingProducts(true)
 
-  const availableCategories = useMemo(() => {
-    const categories = apiCategories.length
-      ? apiCategories
-      : Array.from(new Set(productsByGroup.map((item) => item.category)))
-    return ['All', ...categories]
-  }, [apiCategories, productsByGroup])
+    const selectedCategoryId =
+      selectedCategory === 'All'
+        ? undefined
+        : categories.find((category) => category.name === selectedCategory)?.id
 
-  const filteredProducts = useMemo(() => {
-    const min = Number(minPrice || 0)
-    const max = Number(maxPrice || Number.MAX_SAFE_INTEGER)
-
-    const filtered = productsByGroup.filter((item) => {
-      const categoryOk = selectedCategory === 'All' || item.category === selectedCategory
-      const priceOk = item.price >= min && item.price <= max
-      return categoryOk && priceOk
+    getProducts({
+      page: 1,
+      limit: 40,
+      group: selectedGroup,
+      categoryId: selectedCategoryId,
+      ...(minPrice ? { minPrice: Number(minPrice) } : {}),
+      ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
     })
+      .then((response) => {
+        if (!mounted) return
+        const mapped = response.items.map((item, index) =>
+          toStorefrontProduct(item, index),
+        )
+        const sorted = sortProducts(mapped, sortBy)
+        setProducts(sorted)
+      })
+      .catch(() => {
+        if (!mounted) return
+        setProducts([])
+      })
+      .finally(() => {
+        if (mounted) setLoadingProducts(false)
+      })
 
-    if (sortBy === 'price-asc') return [...filtered].sort((a, b) => a.price - b.price)
-    if (sortBy === 'price-desc') return [...filtered].sort((a, b) => b.price - a.price)
-    if (sortBy === 'name-asc') return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
-    return [...filtered].sort((a, b) => b.id - a.id)
-  }, [productsByGroup, selectedCategory, minPrice, maxPrice, sortBy])
+    return () => {
+      mounted = false
+    }
+  }, [categories, selectedCategory, selectedGroup, minPrice, maxPrice, sortBy])
+
+  const availableCategories = useMemo(
+    () => ['All', ...categories.map((item) => item.name)],
+    [categories],
+  )
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5">
@@ -65,7 +80,7 @@ export function AllProductsPage() {
               Category Products ({selectedGroup})
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              {filteredProducts.length} items found
+              {products.length} items found
             </p>
           </div>
 
@@ -111,14 +126,16 @@ export function AllProductsPage() {
         </aside>
 
         <div className="flex-1">
-          {filteredProducts.length === 0 ? (
+          {loadingProducts ? (
+            <ProductsGridSkeleton />
+          ) : products.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
               No products found for this filter. Try another category,
               or price range.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -164,6 +181,53 @@ export function AllProductsPage() {
         </div>
       )}
     </section>
+  )
+}
+
+function sortProducts(products: ReturnType<typeof toStorefrontProduct>[], sortBy: SortBy) {
+  if (sortBy === 'price-asc') return [...products].sort((a, b) => a.price - b.price)
+  if (sortBy === 'price-desc') return [...products].sort((a, b) => b.price - a.price)
+  if (sortBy === 'name-asc') return [...products].sort((a, b) => a.name.localeCompare(b.name))
+  return products
+}
+
+function toStorefrontProduct(item: StoreProductItem, seed: number) {
+  return {
+    id: toStableNumberId(item.id, seed),
+    routeId: item.id,
+    name: item.name,
+    description: '',
+    category: item.category?.name ?? 'General',
+    brand: 'Mankind',
+    packSize: '1 pack',
+    manufacturer: 'Mankind Life Sciences',
+    price: Number(item.price),
+    image: item.imageUrl,
+  }
+}
+
+function toStableNumberId(value: string, seed = 0) {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index)
+    hash |= 0
+  }
+
+  return Math.abs(hash + seed) || seed + 1
+}
+
+function ProductsGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="animate-pulse rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="h-40 rounded-xl bg-slate-200" />
+          <div className="mt-3 h-4 w-4/5 rounded bg-slate-200" />
+          <div className="mt-2 h-3 w-1/2 rounded bg-slate-200" />
+          <div className="mt-3 h-5 w-2/5 rounded bg-slate-200" />
+        </div>
+      ))}
+    </div>
   )
 }
 

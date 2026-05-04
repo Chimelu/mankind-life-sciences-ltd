@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getAllCategories } from '../../../api/categories.api'
+import { getAllCategories, type StoreCategory } from '../../../api/categories.api'
 import { getAllDistributors } from '../../../api/distributors.api'
+import { getProducts, type StoreProductItem } from '../../../api/products.api'
 import { CategoryShowcase } from '../components/CategoryShowcase'
 import { DealerCard } from '../components/DealerCard'
 import type { Dealer } from '../components/DealerCard'
@@ -33,77 +34,13 @@ const slides = [
   },
 ]
 
-const demoProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Mebendazol 100mg *30 Tabs',
-    category: 'Tablets',
-    price: 9250,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 2,
-    name: 'Panadol Extra *20 Caplets',
-    category: 'Pain Relief',
-    price: 7700,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 3,
-    name: 'Adapalene Gel Micro 0.1%',
-    category: 'Skin Care',
-    price: 7300,
-    image: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 4,
-    name: 'Differin Gel 0.1% 45g',
-    category: 'Skin Care',
-    price: 29700,
-    image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 5,
-    name: 'Vitaced Complete A-Z',
-    category: 'Vitamins',
-    price: 17550,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 6,
-    name: 'Vitaced C Effervescent',
-    category: 'Vitamins',
-    price: 6850,
-    image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 7,
-    name: 'Metformin 500mg Pack',
-    category: 'Tablets',
-    price: 4950,
-    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 8,
-    name: 'Immunity Booster Syrup',
-    category: 'Syrups',
-    price: 11200,
-    image: 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&w=600&q=80',
-  },
-]
-
-function fetchDemoProducts(): Promise<Product[]> {
-  return new Promise((resolve) => {
-    window.setTimeout(() => resolve(demoProducts), 450)
-  })
-}
-
 export function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0)
-  const [products, setProducts] = useState<Product[]>([])
+  const [mostPopularProducts, setMostPopularProducts] = useState<Product[]>([])
+  const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({})
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [categoryNames, setCategoryNames] = useState<string[]>([])
+  const [categories, setCategories] = useState<StoreCategory[]>([])
   const [dealers, setDealers] = useState<Dealer[]>([])
 
   useEffect(() => {
@@ -116,25 +53,58 @@ export function HomePage() {
 
   useEffect(() => {
     let mounted = true
-    fetchDemoProducts().then((data) => {
-      if (!mounted) return
-      setProducts(data)
-      setLoadingProducts(false)
-    })
+    const loadHomeProducts = async () => {
+      try {
+        const allCategories = await getAllCategories()
+        const activeCategories = allCategories.filter((item) => item.isActive)
+
+        if (!mounted) return
+        setCategories(activeCategories)
+
+        const [popularResult, ...categoryResults] = await Promise.all([
+          getProducts({ page: 1, limit: 10 }),
+          ...activeCategories.map((category) =>
+            getProducts({
+              categoryId: category.id,
+              page: 1,
+              limit: 10,
+            }),
+          ),
+        ])
+
+        if (!mounted) return
+
+        setMostPopularProducts(
+          popularResult.items.map((item, index) =>
+            toStorefrontProduct(item, item.category?.name ?? 'Product', index),
+          ),
+        )
+
+        const nextProductsByCategory: Record<string, Product[]> = {}
+        activeCategories.forEach((category, index) => {
+          const result = categoryResults[index]
+          nextProductsByCategory[category.id] = result.items.map((item, itemIndex) =>
+            toStorefrontProduct(item, category.name, itemIndex),
+          )
+        })
+        setProductsByCategory(nextProductsByCategory)
+      } catch {
+        if (!mounted) return
+        setCategories([])
+        setMostPopularProducts([])
+        setProductsByCategory({})
+      } finally {
+        if (mounted) {
+          setLoadingProducts(false)
+        }
+      }
+    }
+
+    void loadHomeProducts()
 
     return () => {
       mounted = false
     }
-  }, [])
-
-  useEffect(() => {
-    getAllCategories()
-      .then((data) => {
-        setCategoryNames(data.filter((item) => item.isActive).map((item) => item.name))
-      })
-      .catch(() => {
-        setCategoryNames([])
-      })
   }, [])
 
   useEffect(() => {
@@ -153,23 +123,13 @@ export function HomePage() {
   const nextSlide = () => setActiveSlide((prev) => (prev + 1) % slides.length)
 
   const visibleProducts = useMemo(() => {
-    if (selectedCategory === 'All') return products
-    return products.filter((product) => product.category === selectedCategory)
-  }, [products, selectedCategory])
-
-  const mostPopularProducts = useMemo(() => products.slice(0, 5), [products])
-  const mankindCoreManufacturing = useMemo(
-    () => products.filter((item) => ['Tablets', 'Syrups'].includes(item.category)),
-    [products],
-  )
-  const mankindSpecialtyCare = useMemo(
-    () => products.filter((item) => ['Skin Care', 'Pain Relief'].includes(item.category)),
-    [products],
-  )
-  const mankindWellnessRange = useMemo(
-    () => products.filter((item) => item.category === 'Vitamins'),
-    [products],
-  )
+    if (selectedCategory === 'All') {
+      return Object.values(productsByCategory).flat()
+    }
+    const selected = categories.find((category) => category.name === selectedCategory)
+    if (!selected) return []
+    return productsByCategory[selected.id] ?? []
+  }, [categories, productsByCategory, selectedCategory])
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-6 md:px-5">
@@ -233,15 +193,13 @@ export function HomePage() {
       </div>
 
       <CategoryShowcase
-        categories={categoryNames}
+        categories={categories.map((item) => item.name)}
         onSelectProductCategory={setSelectedCategory}
       />
 
       <section className="mt-9 space-y-10">
         {loadingProducts ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
-            Loading products...
-          </div>
+          <HomeShelvesSkeleton />
         ) : (
           <>
             <ProductShelf
@@ -249,21 +207,14 @@ export function HomePage() {
               title="Trusted essentials customers reorder often"
               products={mostPopularProducts}
             />
-            <ProductShelf
-              label="Mankind Core Manufacturing"
-              title="Factory-driven tablets and syrups for daily care"
-              products={mankindCoreManufacturing}
-            />
-            <ProductShelf
-              label="Mankind Specialty Care"
-              title="Targeted skin and pain management solutions"
-              products={mankindSpecialtyCare}
-            />
-            <ProductShelf
-              label="Mankind Wellness Range"
-              title="Vitamins and immunity support for preventive care"
-              products={mankindWellnessRange}
-            />
+            {categories.map((category) => (
+              <ProductShelf
+                key={category.id}
+                label={category.name}
+                title={`Top picks in ${category.name}`}
+                products={productsByCategory[category.id] ?? []}
+              />
+            ))}
             <ProductShelf
               label="Filtered by Category"
               title={`Showing ${selectedCategory} selections`}
@@ -313,24 +264,19 @@ function ProductShelf({ label, title, products }: ProductShelfProps) {
 
   return (
     <section>
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-green">
             {label}
           </p>
-          <h2 className="mt-1 text-2xl font-semibold text-slate-900 md:text-3xl">
+          <h2 className="mt-1 truncate text-lg font-semibold text-slate-900 sm:text-2xl md:text-3xl">
             {title}
           </h2>
         </div>
-        <div className="flex items-center gap-4">
-          <p className="text-sm text-slate-500">
-            {products.length} product{products.length === 1 ? '' : 's'}
-          </p>
-          <button className="inline-flex items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/5 px-4 py-2 text-sm font-semibold text-brand-green transition hover:border-brand-green hover:bg-brand-green hover:text-white">
-            View all products
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
+        <button className="shrink-0 inline-flex items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/5 px-3 py-1.5 text-xs font-semibold text-brand-green transition hover:border-brand-green hover:bg-brand-green hover:text-white sm:px-4 sm:py-2 sm:text-sm">
+          View all
+          <span aria-hidden="true">→</span>
+        </button>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-5 lg:grid-cols-4 xl:grid-cols-5">
@@ -355,5 +301,57 @@ function ChevronRightIcon() {
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M9 18l6-6-6-6" />
     </svg>
+  )
+}
+
+function toStorefrontProduct(
+  item: StoreProductItem,
+  fallbackCategoryName: string,
+  seed: number,
+): Product {
+  return {
+    id: toStableNumberId(item.id, seed),
+    routeId: item.id,
+    name: item.name,
+    description: '',
+    category: item.category?.name ?? fallbackCategoryName,
+    brand: 'Mankind',
+    packSize: '1 pack',
+    manufacturer: 'Mankind Life Sciences',
+    price: Number(item.price),
+    image: item.imageUrl,
+  }
+}
+
+function toStableNumberId(value: string, seed = 0) {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index)
+    hash |= 0
+  }
+
+  return Math.abs(hash + seed) || seed + 1
+}
+
+function HomeShelvesSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 4 }).map((_, sectionIndex) => (
+        <section key={sectionIndex} className="animate-pulse">
+          <div className="h-4 w-40 rounded bg-slate-200" />
+          <div className="mt-2 h-8 w-72 rounded bg-slate-200" />
+          <div className="mt-5 grid grid-cols-2 gap-5 lg:grid-cols-4 xl:grid-cols-5">
+            {Array.from({ length: 5 }).map((__, itemIndex) => (
+              <div key={itemIndex} className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="h-40 rounded-xl bg-slate-200" />
+                <div className="mt-3 h-4 w-4/5 rounded bg-slate-200" />
+                <div className="mt-2 h-3 w-1/2 rounded bg-slate-200" />
+                <div className="mt-3 h-5 w-2/5 rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </>
   )
 }

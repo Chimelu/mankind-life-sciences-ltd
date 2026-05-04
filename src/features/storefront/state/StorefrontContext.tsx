@@ -6,6 +6,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react'
+import { toast } from 'react-toastify'
 import { useAuth } from '../../../app/auth/AuthContext'
 import { addFavourite, getFavouriteIds, removeFavourite } from '../../../api/favourites.api'
 
@@ -116,14 +117,22 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
     product: { id: number; name: string; price: number; image: string; packSize?: string },
     quantity = 1,
   ) => {
+    const safeQuantity = Math.max(1, quantity)
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id)
-      if (!existing) return [...prev, toCartItem(product, Math.max(1, quantity))]
+      if (!existing) return [...prev, toCartItem(product, safeQuantity)]
       return prev.map((item) =>
         item.id === product.id
-          ? { ...item, quantity: item.quantity + Math.max(1, quantity) }
+          ? { ...item, quantity: item.quantity + safeQuantity }
           : item,
       )
+    })
+
+    toast.success(`Added ${safeQuantity} ${safeQuantity > 1 ? 'items' : 'item'} of ${product.name} to cart`, {
+      icon: '🛒',
+      style: {
+        borderRadius: '0.75rem',
+      },
     })
   }
 

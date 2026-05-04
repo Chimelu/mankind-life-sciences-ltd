@@ -3,8 +3,13 @@ import { useStorefront } from '../state/StorefrontContext'
 
 export type Product = {
   id: number
+  routeId?: string
   name: string
+  description?: string
   category: string
+  brand?: string
+  packSize?: string
+  manufacturer?: string
   price: number
   image: string
 }
@@ -14,11 +19,12 @@ type ProductCardProps = {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
+  const { addToCart, addToFavourites, isFavourite } = useStorefront()
+  const productRouteId = product.routeId ?? String(product.id)
 
   return (
     <article className="rounded-2xl bg-white p-2.5 transition hover:shadow-sm">
-      <Link to={`/products/${product.id}`} className="block">
+      <Link to={`/products/${productRouteId}`} className="block">
         <div className="flex h-44 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-100/70">
           <img
             src={product.image}
@@ -28,7 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
           />
         </div>
       </Link>
-      <Link to={`/products/${product.id}`} className="block">
+      <Link to={`/products/${productRouteId}`} className="block">
         <p className="mt-3 line-clamp-2 min-h-11 text-[16px] font-semibold leading-5 text-slate-800 hover:text-brand-green">
           {product.name}
         </p>
@@ -41,14 +47,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           type="button"
           onClick={() => addToCart(product)}
-          className={`inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 text-xs font-semibold text-white transition active:scale-[0.98] sm:px-3.5 sm:text-sm ${
-            isInCart(product.id)
-              ? 'bg-brand-green hover:opacity-95'
-              : 'bg-brand-red hover:opacity-90'
-          }`}
+          className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-brand-red px-3 text-xs font-semibold text-white transition hover:opacity-90 active:scale-[0.98] sm:px-3.5 sm:text-sm"
         >
           <MiniCartIcon />
-          <span>{isInCart(product.id) ? 'Added to cart' : 'Add to cart'}</span>
+          <span>Add to cart</span>
         </button>
         <button
           type="button"
