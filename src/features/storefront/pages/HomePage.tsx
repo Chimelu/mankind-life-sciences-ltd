@@ -10,7 +10,7 @@ import { ProductCard, type Product } from '../components/ProductCard'
 
 const slides = [
   {
-    eyebrow: 'Pharmaceutical imports and nationwide distribution',
+    // eyebrow: 'Pharmaceutical imports and nationwide distribution',
     title: 'We Are Active in Pharmaceutical Imports and Distribution',
     subtitle:
       'We supply approved pharmaceutical products through trusted import channels and structured distribution networks for hospitals, pharmacies, and dealers.',
@@ -19,7 +19,7 @@ const slides = [
     image: '/hero/slide-1.png',
   },
   {
-    eyebrow: 'Manufacturing roadmap and quality systems',
+    // eyebrow: 'Manufacturing roadmap and quality systems',
     title: 'Advancing Toward Scalable Local Manufacturing',
     subtitle:
       'As we expand into manufacturing, we are strengthening quality systems, operations, and compliance structures for reliable long-term production.',
@@ -171,9 +171,9 @@ export function HomePage() {
 
         <div className="relative z-10 grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_470px] lg:items-center">
           <div className="max-w-[620px] lg:justify-self-start lg:pl-12">
-            <p className="mb-3 inline-flex rounded-full border border-brand-green/20 bg-white/70 px-3 py-1 text-xs font-medium text-brand-green md:text-sm">
+            {/* <p className="mb-3 inline-flex rounded-full border border-brand-green/20 bg-white/70 px-3 py-1 text-xs font-medium text-brand-green md:text-sm">
               {currentSlide.eyebrow}
-            </p>
+            </p> */}
             <h1 className="text-3xl font-semibold leading-[1.08] text-slate-950 md:text-4xl lg:text-[2.2rem]">
               {currentSlide.title}
             </h1>

@@ -5,7 +5,7 @@ import { ProductCard } from '../components/ProductCard'
 import type { ProductGroup } from '../data/catalogProducts'
 type SortBy = 'latest' | 'price-asc' | 'price-desc' | 'name-asc'
 
-const filterGroups: ProductGroup[] = ['Drugs', 'Non-Drugs', 'Laboratory Tests']
+const filterGroups: ProductGroup[] = ['Drugs', 'Non-Drugs' , 'Laboratory Tests']
 
 export function AllProductsPage() {
   const [selectedGroup, setSelectedGroup] = useState<ProductGroup>('Drugs')
