@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../../app/auth/AuthContext'
 import { navLinks } from '../data/navigation'
-import { catalogProducts } from '../data/catalogProducts'
+import { getProducts, type StoreProductItem } from '../../../api/products.api'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useStorefront } from '../state/StorefrontContext'
 
@@ -14,6 +14,8 @@ export function Navbar() {
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchSuggestions, setSearchSuggestions] = useState<StoreProductItem[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const location = useLocation()
   const closeTimeoutRef = useRef<number | null>(null)
   const initials = user?.name
@@ -29,7 +31,33 @@ export function Navbar() {
     setIsLogoutConfirmOpen(false)
     setIsMobileSearchOpen(false)
     setSearchQuery('')
+    setSearchSuggestions([])
   }, [location.pathname])
+
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!query) {
+      setSearchSuggestions([])
+      setIsLoadingSuggestions(false)
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsLoadingSuggestions(true)
+      getProducts({ search: query, page: 1, limit: 8 })
+        .then((response) => {
+          setSearchSuggestions(response.items)
+        })
+        .catch(() => {
+          setSearchSuggestions([])
+        })
+        .finally(() => {
+          setIsLoadingSuggestions(false)
+        })
+    }, 250)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [searchQuery])
 
   const isDesktopViewport = () =>
     typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
@@ -66,12 +94,6 @@ export function Navbar() {
 
   const isProfileRoute = location.pathname.startsWith('/dashboard/profile')
   const isOrdersRoute = location.pathname.startsWith('/dashboard/orders')
-  const searchSuggestions = searchQuery.trim()
-    ? catalogProducts
-        .filter((product) => product.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
-        .slice(0, 8)
-    : []
-
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -90,9 +112,38 @@ export function Navbar() {
         <label className="relative hidden flex-1 md:block">
           <input
             type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search for drugs and healthcare products"
             className="w-full rounded-full border border-slate-300 px-5 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-green"
           />
+          {searchQuery.trim() && (
+            <div className="absolute left-0 top-[calc(100%+8px)] z-40 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+              {isLoadingSuggestions ? (
+                <p className="px-4 py-3 text-sm text-slate-500">Loading suggestions...</p>
+              ) : searchSuggestions.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-slate-500">No matching products found.</p>
+              ) : (
+                <div className="max-h-80 overflow-auto py-1">
+                  {searchSuggestions.map((product) => (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('')
+                        setSearchSuggestions([])
+                        navigate(`/products/${product.id}`)
+                      }}
+                      className="block w-full px-4 py-2.5 text-left transition hover:bg-slate-100"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{product.name}</p>
+                      <p className="text-xs text-slate-500">{product.category?.name ?? 'General'}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </label>
 
         <div className="ml-auto flex items-center gap-2">
@@ -213,7 +264,9 @@ export function Navbar() {
 
             {searchQuery.trim() && (
               <div className="mt-3 max-h-[55vh] overflow-auto rounded-2xl border border-slate-200 bg-white p-2">
-                {searchSuggestions.length === 0 ? (
+                {isLoadingSuggestions ? (
+                  <p className="px-2 py-3 text-sm text-slate-500">Loading suggestions...</p>
+                ) : searchSuggestions.length === 0 ? (
                   <p className="px-2 py-3 text-sm text-slate-500">
                     No matching products found.
                   </p>
@@ -226,12 +279,13 @@ export function Navbar() {
                         onClick={() => {
                           setIsMobileSearchOpen(false)
                           setSearchQuery('')
+                          setSearchSuggestions([])
                           navigate(`/products/${product.id}`)
                         }}
                         className="block w-full rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-100"
                       >
                         <p className="text-sm font-semibold text-slate-900">{product.name}</p>
-                        <p className="text-xs text-slate-500">{product.category}</p>
+                        <p className="text-xs text-slate-500">{product.category?.name ?? 'General'}</p>
                       </button>
                     ))}
                   </div>
