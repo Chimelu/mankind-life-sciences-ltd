@@ -136,6 +136,11 @@ export function HomePage() {
     return productsByCategory[selected.id] ?? []
   }, [categories, productsByCategory, selectedCategory])
 
+  const handleViewCategory = (category: string) => {
+    setSelectedCategory(category)
+    navigate(`/products?category=${encodeURIComponent(category)}`)
+  }
+
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-6 md:px-5">
       <div
@@ -215,7 +220,7 @@ export function HomePage() {
 
       <CategoryShowcase
         categories={categories.map((item) => item.name)}
-        onSelectProductCategory={setSelectedCategory}
+        onSelectProductCategory={handleViewCategory}
       />
 
       <section className="mt-9 space-y-10">

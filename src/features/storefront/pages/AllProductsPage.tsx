@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getAllCategories, type StoreCategory } from '../../../api/categories.api'
 import { getProducts, type StoreProductItem } from '../../../api/products.api'
 import { ProductCard } from '../components/ProductCard'
-import type { ProductGroup } from '../data/catalogProducts'
 type SortBy = 'latest' | 'price-asc' | 'price-desc' | 'name-asc'
 
-const filterGroups: ProductGroup[] = ['Drugs', 'Non-Drugs' , 'Laboratory Tests']
-
 export function AllProductsPage() {
-  const [selectedGroup, setSelectedGroup] = useState<ProductGroup>('Drugs')
+  const [searchParams] = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [sortBy, setSortBy] = useState<SortBy>('latest')
+  const sortBy: SortBy = 'latest'
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
@@ -29,6 +27,23 @@ export function AllProductsPage() {
   }, [])
 
   useEffect(() => {
+    const categoryFromQuery = searchParams.get('category')?.trim()
+    if (!categoryFromQuery) {
+      return
+    }
+    if (categoryFromQuery === 'All') {
+      setSelectedCategory('All')
+      return
+    }
+    const matchedCategory = categories.find(
+      (category) => category.name.toLowerCase() === categoryFromQuery.toLowerCase(),
+    )
+    if (matchedCategory) {
+      setSelectedCategory(matchedCategory.name)
+    }
+  }, [categories, searchParams])
+
+  useEffect(() => {
     let mounted = true
     setLoadingProducts(true)
 
@@ -40,7 +55,6 @@ export function AllProductsPage() {
     getProducts({
       page: 1,
       limit: 40,
-      group: selectedGroup,
       categoryId: selectedCategoryId,
       ...(minPrice ? { minPrice: Number(minPrice) } : {}),
       ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
@@ -64,7 +78,7 @@ export function AllProductsPage() {
     return () => {
       mounted = false
     }
-  }, [categories, selectedCategory, selectedGroup, minPrice, maxPrice, sortBy])
+  }, [categories, selectedCategory, minPrice, maxPrice, sortBy])
 
   const availableCategories = useMemo(
     () => ['All', ...categories.map((item) => item.name)],
@@ -73,48 +87,19 @@ export function AllProductsPage() {
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 md:px-5">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 md:text-2xl">
-              Category Products ({selectedGroup})
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {products.length} items found
-            </p>
-          </div>
-
-          <label className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm">
-            <span className="text-slate-500">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortBy)}
-              className="bg-transparent font-medium text-slate-700 outline-none"
-            >
-              <option value="latest">Latest</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="name-asc">Name: A-Z</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="mt-3 flex justify-end md:hidden">
-          <button
-            onClick={() => setIsMobileFilterOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-semibold text-white shadow-sm"
-          >
-            <FilterIcon />
-            Filter
-          </button>
-        </div>
+      <div className="flex justify-end md:hidden">
+        <button
+          onClick={() => setIsMobileFilterOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-brand-green px-4 py-2 text-sm font-semibold text-white shadow-sm"
+        >
+          <FilterIcon />
+          Filter
+        </button>
       </div>
 
       <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-start">
         <aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-4 md:sticky md:top-28 md:block md:w-64 md:shrink-0">
           <FilterPanel
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             availableCategories={availableCategories}
@@ -161,8 +146,6 @@ export function AllProductsPage() {
               </button>
             </div>
             <FilterPanel
-              selectedGroup={selectedGroup}
-              setSelectedGroup={setSelectedGroup}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
               availableCategories={availableCategories}
@@ -232,8 +215,6 @@ function ProductsGridSkeleton() {
 }
 
 type FilterPanelProps = {
-  selectedGroup: ProductGroup
-  setSelectedGroup: (group: ProductGroup) => void
   selectedCategory: string
   setSelectedCategory: (category: string) => void
   availableCategories: string[]
@@ -244,8 +225,6 @@ type FilterPanelProps = {
 }
 
 function FilterPanel({
-  selectedGroup,
-  setSelectedGroup,
   selectedCategory,
   setSelectedCategory,
   availableCategories,
@@ -256,27 +235,7 @@ function FilterPanel({
 }: FilterPanelProps) {
   return (
     <>
-      <h2 className="text-lg font-semibold text-slate-900">Filter</h2>
-
-      <div className="mt-4 border-t border-slate-200 pt-4">
-        <p className="mb-2 text-sm font-semibold text-slate-700">Choose</p>
-        <select
-          value={selectedGroup}
-          onChange={(event) => {
-            setSelectedGroup(event.target.value as ProductGroup)
-            setSelectedCategory('All')
-          }}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-green"
-        >
-          {filterGroups.map((group) => (
-            <option key={group} value={group}>
-              {group}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mt-5 border-t border-slate-200 pt-4">
+      <div className="border-t border-slate-200 pt-4">
         <p className="text-sm font-semibold text-slate-700">Categories</p>
         <div className="mt-3 space-y-2">
           {availableCategories.map((category) => (
