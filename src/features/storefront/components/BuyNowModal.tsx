@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { createOrder, initiatePayment } from '../../../api/orders.api'
+import { createOrder, type Order } from '../../../api/orders.api'
+import { PayAmountModal } from '../../orders/PayAmountModal'
 
 type BuyNowModalProps = {
   open: boolean
@@ -24,16 +25,24 @@ export function BuyNowModal({
   const [fulfillmentMethod, setFulfillmentMethod] = useState<'pickup' | 'delivery'>('pickup')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [submitting, setSubmitting] = useState<'later' | 'now' | null>(null)
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null)
+  const [allowSkipPayment, setAllowSkipPayment] = useState(false)
 
   useEffect(() => {
     if (!open) {
       setFulfillmentMethod('pickup')
       setDeliveryAddress('')
       setSubmitting(null)
+      setPlacedOrder(null)
+      setAllowSkipPayment(false)
     }
   }, [open])
 
-  if (!open) return null
+  const closeAll = () => {
+    setPlacedOrder(null)
+    setAllowSkipPayment(false)
+    onClose()
+  }
 
   const validateForm = () => {
     if (fulfillmentMethod === 'delivery' && !deliveryAddress.trim()) {
@@ -57,9 +66,9 @@ export function BuyNowModal({
     setSubmitting('later')
     try {
       const order = await placeOrder()
-      toast.success('Order placed. You can pay anytime from your orders page.')
-      onClose()
-      navigate(`/dashboard/orders/${order.id}`)
+      toast.success('Order placed successfully')
+      setAllowSkipPayment(true)
+      setPlacedOrder(order)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to place order')
     } finally {
@@ -73,15 +82,36 @@ export function BuyNowModal({
     setSubmitting('now')
     try {
       const order = await placeOrder()
-      const callbackUrl = `${window.location.origin}/dashboard/orders/${order.id}`
-      const payment = await initiatePayment(order.id, { callbackUrl })
-      onClose()
-      window.location.href = payment.authorizationUrl
+      setAllowSkipPayment(false)
+      setPlacedOrder(order)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to start payment')
+      toast.error(error instanceof Error ? error.message : 'Failed to place order')
+    } finally {
       setSubmitting(null)
     }
   }
+
+  if (placedOrder) {
+    return (
+      <PayAmountModal
+        open
+        onClose={closeAll}
+        orderId={placedOrder.id}
+        orderNumber={placedOrder.orderNumber}
+        totalAmount={placedOrder.totalAmount}
+        amountPaid={placedOrder.amountPaid}
+        balanceDue={placedOrder.balanceDue}
+        allowSkip={allowSkipPayment}
+        title={allowSkipPayment ? 'Pay later — choose amount' : 'Pay now'}
+        onSkipped={() => {
+          navigate(`/dashboard/orders/${placedOrder.id}`)
+          closeAll()
+        }}
+      />
+    )
+  }
+
+  if (!open) return null
 
   const isBusy = submitting !== null
 
@@ -187,13 +217,13 @@ export function BuyNowModal({
             disabled={isBusy}
             className="rounded-full bg-brand-red py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting === 'now' ? 'Redirecting...' : 'Pay now'}
+            {submitting === 'now' ? 'Placing order...' : 'Pay now'}
           </button>
         </div>
 
         <p className="mt-4 text-xs leading-5 text-slate-500">
-          Pay later places your order on credit so you can pay in parts from My Orders. Pay
-          now opens Paystack for immediate payment.
+          Pay later places your order on credit, then you choose how much to pay now (or skip).
+          Pay now places the order and opens payment for the amount you enter.
         </p>
       </div>
     </div>
