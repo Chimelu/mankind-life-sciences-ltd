@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { getProductById, getProducts } from '../../../api/products.api'
+import { useAuth } from '../../../app/auth/AuthContext'
+import { BuyNowModal } from '../components/BuyNowModal'
 import { ProductCard, type Product } from '../components/ProductCard'
 import { useStorefront } from '../state/StorefrontContext'
 
@@ -26,16 +29,34 @@ const reviews = [
 ]
 
 export function ProductDetailsPage() {
+  const navigate = useNavigate()
+  const { isSignedIn } = useAuth()
   const { productId } = useParams()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loadingProduct, setLoadingProduct] = useState(true)
   const [quantity, setQuantity] = useState(1)
+  const [isBuyNowOpen, setIsBuyNowOpen] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [isZoomed, setIsZoomed] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
   const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
+
+  const openBuyNow = () => {
+    if (!product?.routeId) {
+      toast.error('This product cannot be ordered right now')
+      return
+    }
+
+    if (!isSignedIn) {
+      toast.info('Sign in to place your order')
+      navigate('/auth/sign-in')
+      return
+    }
+
+    setIsBuyNowOpen(true)
+  }
 
   useEffect(() => {
     if (!productId) {
@@ -259,7 +280,11 @@ export function ProductDetailsPage() {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <button className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white">
+              <button
+                type="button"
+                onClick={openBuyNow}
+                className="rounded-full bg-brand-red px-5 py-2.5 text-sm font-semibold text-white"
+              >
                 Buy now
               </button>
               <button
@@ -361,6 +386,17 @@ export function ProductDetailsPage() {
           ))}
         </div>
       </section>
+
+      {product.routeId && (
+        <BuyNowModal
+          open={isBuyNowOpen}
+          onClose={() => setIsBuyNowOpen(false)}
+          productId={product.routeId}
+          productName={product.name}
+          quantity={quantity}
+          estimatedTotal={totalPrice}
+        />
+      )}
     </section>
   )
 }

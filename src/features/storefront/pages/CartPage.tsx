@@ -1,12 +1,19 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { createOrder } from '../../../api/orders.api'
+import { useAuth } from '../../../app/auth/AuthContext'
 import { useStorefront } from '../state/StorefrontContext'
 
 export function CartPage() {
-  const { cartItems: items, setCartItemQuantity, removeFromCart } = useStorefront()
+  const navigate = useNavigate()
+  const { isSignedIn } = useAuth()
+  const { cartItems: items, setCartItemQuantity, removeFromCart, clearCart } = useStorefront()
   const [fulfillmentMethod, setFulfillmentMethod] = useState<'pickup' | 'delivery'>(
     'delivery',
   )
+  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const setItemQuantity = (id: number, quantity: number) => {
     setCartItemQuantity(id, quantity)
@@ -23,6 +30,50 @@ export function CartPage() {
   const serviceFee = Math.round(subtotal * 0.015)
   const grandTotal = subtotal + serviceFee
   const totalUnits = items.reduce((count, item) => count + item.quantity, 0)
+
+  const handleCheckout = async () => {
+    if (!isSignedIn) {
+      toast.info('Sign in to place your order')
+      navigate('/auth/sign-in')
+      return
+    }
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty')
+      return
+    }
+
+    const missingProductIds = items.filter((item) => !item.productId)
+    if (missingProductIds.length > 0) {
+      toast.error('Some cart items are outdated. Remove them and add products again.')
+      return
+    }
+
+    if (fulfillmentMethod === 'delivery' && !deliveryAddress.trim()) {
+      toast.error('Enter a delivery address')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const order = await createOrder({
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+        fulfillmentMethod,
+        deliveryAddress: fulfillmentMethod === 'delivery' ? deliveryAddress.trim() : undefined,
+      })
+
+      clearCart()
+      toast.success('Order placed successfully')
+      navigate(`/dashboard/orders/${order.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to place order')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <section className="mx-auto w-full max-w-[96rem] px-3 py-8 pb-28 md:px-5 md:pb-32">
@@ -147,6 +198,19 @@ export function CartPage() {
             </div>
           </div>
 
+          {fulfillmentMethod === 'delivery' && (
+            <label className="mt-4 block">
+              <span className="text-sm font-semibold text-slate-700">Delivery address</span>
+              <textarea
+                value={deliveryAddress}
+                onChange={(event) => setDeliveryAddress(event.target.value)}
+                rows={3}
+                placeholder="Enter delivery address"
+                className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-green"
+              />
+            </label>
+          )}
+
           <div className="mt-4 space-y-2 text-sm text-slate-600">
             <p className="flex items-center justify-between">
               <span>Total line items</span>
@@ -179,13 +243,18 @@ export function CartPage() {
             </p>
           </div>
 
-          <button className="mt-5 w-full rounded-full bg-brand-green py-3 text-sm font-semibold text-white">
-            Proceed to payment
+          <button
+            type="button"
+            onClick={() => void handleCheckout()}
+            disabled={isSubmitting || items.length === 0}
+            className="mt-5 w-full rounded-full bg-brand-green py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? 'Placing order...' : 'Proceed to payment'}
           </button>
 
           <p className="mt-4 text-xs leading-5 text-slate-500">
-            Prices shown are estimated for wholesale checkout. Final logistics
-            and dealer allocation are confirmed before dispatch.
+            Your order is placed on credit. You can pay in full or in parts from the order
+            page after checkout.
           </p>
         </aside>
       </div>
@@ -195,8 +264,13 @@ export function CartPage() {
           <p className="text-sm font-semibold text-slate-700">
             Total: <span className="text-brand-red">₦{grandTotal.toLocaleString()}</span>
           </p>
-          <button className="rounded-full bg-brand-green px-6 py-2.5 text-sm font-semibold text-white">
-            Proceed to payment
+          <button
+            type="button"
+            onClick={() => void handleCheckout()}
+            disabled={isSubmitting || items.length === 0}
+            className="rounded-full bg-brand-green px-6 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? 'Placing...' : 'Proceed to payment'}
           </button>
         </div>
       </div>

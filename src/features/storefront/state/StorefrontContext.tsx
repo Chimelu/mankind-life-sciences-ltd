@@ -15,6 +15,7 @@ const FAVOURITES_STORAGE_KEY = 'mankind-favourite-ids'
 
 export type CartItem = {
   id: number
+  productId: string
   name: string
   sku: string
   price: number
@@ -28,11 +29,19 @@ type StorefrontContextValue = {
   cartItems: CartItem[]
   favouriteIds: number[]
   addToCart: (
-    product: { id: number; name: string; price: number; image: string; packSize?: string },
+    product: {
+      id: number
+      routeId?: string
+      name: string
+      price: number
+      image: string
+      packSize?: string
+    },
     quantity?: number,
   ) => void
   setCartItemQuantity: (id: number, quantity: number) => void
   removeFromCart: (id: number) => void
+  clearCart: () => void
   isInCart: (productId: number) => boolean
   addToFavourites: (productId: number) => Promise<void>
   removeFromFavourites: (productId: number) => Promise<void>
@@ -42,11 +51,23 @@ type StorefrontContextValue = {
 const StorefrontContext = createContext<StorefrontContextValue | null>(null)
 
 function toCartItem(
-  product: { id: number; name: string; price: number; image: string; packSize?: string },
+  product: {
+    id: number
+    routeId?: string
+    name: string
+    price: number
+    image: string
+    packSize?: string
+  },
   quantity: number,
 ): CartItem {
+  if (!product.routeId) {
+    throw new Error('Product is missing an API id')
+  }
+
   return {
     id: product.id,
+    productId: product.routeId,
     name: product.name,
     sku: `MNK-${String(product.id)}`,
     price: product.price,
@@ -114,9 +135,21 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
   }, [isSignedIn])
 
   const addToCart = (
-    product: { id: number; name: string; price: number; image: string; packSize?: string },
+    product: {
+      id: number
+      routeId?: string
+      name: string
+      price: number
+      image: string
+      packSize?: string
+    },
     quantity = 1,
   ) => {
+    if (!product.routeId) {
+      toast.error('This product cannot be added to cart right now')
+      return
+    }
+
     const safeQuantity = Math.max(1, quantity)
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id)
@@ -145,6 +178,10 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
 
   const removeFromCart = (id: number) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const clearCart = () => {
+    setCartItems([])
   }
 
   const addToFavourites = async (productId: number) => {
@@ -183,6 +220,7 @@ export function StorefrontProvider({ children }: PropsWithChildren) {
       addToCart,
       setCartItemQuantity,
       removeFromCart,
+      clearCart,
       isInCart: (productId: number) =>
         cartItems.some((item) => item.id === productId),
       addToFavourites,

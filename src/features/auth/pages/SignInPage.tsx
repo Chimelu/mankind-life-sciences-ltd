@@ -32,7 +32,7 @@ export function SignInPage() {
         email: result.user.email,
         organization: result.user.companyName,
       })
-      navigate('/dashboard/profile')
+      navigate('/products')
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Login failed')
     } finally {

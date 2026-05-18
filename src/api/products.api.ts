@@ -25,6 +25,7 @@ export type StoreProductItem = {
   packSize?: string
   description?: string
   price: number | string
+  quantity?: number | string
   imageUrl: string
   category?: {
     id: string
