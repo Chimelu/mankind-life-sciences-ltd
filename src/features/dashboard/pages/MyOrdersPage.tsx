@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import { getOrders, type Order } from '../../../api/orders.api'
 import { PayOrderButton } from '../../orders/PayOrderButton'
 import {
+  formatFulfillmentStatus,
   formatOrderDate,
   formatPaymentStatus,
+  fulfillmentStatusClass,
   paymentStatusClass,
 } from '../../orders/order-utils'
 
@@ -87,37 +89,59 @@ export function MyOrdersPage() {
             key={order.id}
             className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-brand-green/40 hover:shadow-sm"
           >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <Link
-                  to={`/dashboard/orders/${order.id}`}
-                  className="font-semibold text-slate-900 hover:text-brand-green"
-                >
-                  {order.orderNumber}
-                </Link>
+            <div className="min-w-0">
+              <Link
+                to={`/dashboard/orders/${order.id}`}
+                className="break-all font-semibold text-slate-900 hover:text-brand-green"
+              >
+                {order.orderNumber}
+              </Link>
+              <div className="mt-2 flex flex-wrap gap-2">
                 <span
-                  className={`ml-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${paymentStatusClass(order.paymentStatus)}`}
+                  className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${paymentStatusClass(order.paymentStatus)}`}
                 >
-                  {formatPaymentStatus(order.paymentStatus)}
+                  Payment: {formatPaymentStatus(order.paymentStatus)}
+                </span>
+                <span
+                  className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${fulfillmentStatusClass(order.fulfillmentStatus)}`}
+                >
+                  Order: {formatFulfillmentStatus(order.fulfillmentStatus)}
                 </span>
               </div>
-              <PayOrderButton order={order} />
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              Date: {formatOrderDate(order.createdAt)} ·{' '}
-              {order.fulfillmentMethod === 'delivery' ? 'Delivery' : 'Pickup'}
-            </p>
-            <div className="mt-2 flex flex-wrap gap-4 text-sm">
-              <p className="font-semibold text-slate-900">
-                Total: ₦{order.totalAmount.toLocaleString()}
+              <p className="mt-2 text-sm text-slate-600">
+                Date: {formatOrderDate(order.createdAt)} ·{' '}
+                {order.fulfillmentMethod === 'delivery' ? 'Delivery' : 'Pickup'}
               </p>
-              <p className="text-slate-600">Paid: ₦{order.amountPaid.toLocaleString()}</p>
-              {order.balanceDue > 0 && (
-                <p className="font-semibold text-brand-red">
-                  Balance: ₦{order.balanceDue.toLocaleString()}
-                </p>
-              )}
             </div>
+
+            <div className="mt-3 flex flex-col gap-2 text-sm lg:grid lg:grid-cols-3 lg:gap-3">
+              <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+                <p className="text-xs text-slate-500">Total</p>
+                <p className="mt-0.5 font-semibold text-slate-900">
+                  ₦{order.totalAmount.toLocaleString()}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+                <p className="text-xs text-slate-500">Paid</p>
+                <p className="mt-0.5 font-semibold text-emerald-700">
+                  ₦{order.amountPaid.toLocaleString()}
+                </p>
+              </div>
+              <div className="rounded-lg border border-brand-red/15 bg-red-50/80 px-3 py-2.5">
+                <p className="text-xs font-medium text-brand-red">Balance</p>
+                <p className="mt-0.5 font-semibold text-brand-red">
+                  ₦{order.balanceDue.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <PayOrderButton
+                order={order}
+                className="flex w-full items-center justify-center rounded-xl bg-brand-green px-5 py-3 text-sm font-semibold text-white sm:w-auto sm:rounded-full"
+              />
+            </div>
+
             <Link
               to={`/dashboard/orders/${order.id}`}
               className="mt-3 inline-block text-sm font-semibold text-brand-green hover:underline"

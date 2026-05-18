@@ -90,7 +90,7 @@ export function PayAmountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="pay-amount-title"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6"
+        className="relative z-10 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-slate-200 bg-white p-5 shadow-xl sm:max-h-none sm:rounded-2xl sm:p-6"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -121,10 +121,20 @@ export function PayAmountModal({
           <p className="mt-1 text-3xl font-bold text-brand-red">
             ₦{balanceDue.toLocaleString()}
           </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Order total ₦{totalAmount.toLocaleString()} · Paid so far ₦
-            {amountPaid.toLocaleString()}
-          </p>
+          <div className="mt-3 flex flex-col gap-2 text-sm">
+            <div className="rounded-lg bg-white/80 px-2.5 py-2">
+              <p className="text-xs text-slate-500">Order total</p>
+              <p className="font-semibold text-slate-800">
+                ₦{totalAmount.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-lg bg-white/80 px-2.5 py-2">
+              <p className="text-xs text-slate-500">Paid so far</p>
+              <p className="font-semibold text-emerald-700">
+                ₦{amountPaid.toLocaleString()}
+              </p>
+            </div>
+          </div>
         </div>
 
         <label className="mt-5 block">
@@ -151,7 +161,7 @@ export function PayAmountModal({
           </p>
         </label>
 
-        <div className={`mt-6 grid gap-2 ${allowSkip ? 'sm:grid-cols-2' : ''}`}>
+        <div className={`mt-6 grid grid-cols-1 gap-2 ${allowSkip ? 'sm:grid-cols-2' : ''}`}>
           {allowSkip && (
             <button
               type="button"

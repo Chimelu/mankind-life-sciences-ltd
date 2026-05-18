@@ -13,6 +13,13 @@ type ApiResponse<T> = {
 
 export type OrderPaymentStatus = 'pending_payment' | 'partially_paid' | 'paid' | 'cancelled'
 
+export type OrderFulfillmentStatus =
+  | 'pending'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+
 export type OrderPaymentRecord = {
   id: string
   orderId: string
@@ -42,7 +49,7 @@ export type Order = {
   orderNumber: string
   userId: string
   paymentStatus: OrderPaymentStatus
-  fulfillmentStatus: string
+  fulfillmentStatus: OrderFulfillmentStatus
   subtotal: number
   serviceFee: number
   totalAmount: number
