@@ -3,12 +3,13 @@ import { useAuth } from '../../../app/auth/AuthContext'
 import { navLinks } from '../data/navigation'
 import { getProducts, type StoreProductItem } from '../../../api/products.api'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { useStorefront } from '../state/StorefrontContext'
+// `useStorefront` is only needed by the commented-out cart and favourites icons.
+// import { useStorefront } from '../state/StorefrontContext'
 
 export function Navbar() {
   const navigate = useNavigate()
   const { isSignedIn, signOut, user } = useAuth()
-  const { cartItems, favouriteIds } = useStorefront()
+  // const { cartItems, favouriteIds } = useStorefront()
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false)
   const [isProfilePinned, setIsProfilePinned] = useState(false)
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false)
@@ -155,6 +156,7 @@ export function Navbar() {
           >
             <SearchIcon />
           </button>
+          {/* Cart and favourites icons hidden for now
           <Link
             to="/cart"
             className="relative rounded-full p-2 transition hover:bg-slate-100"
@@ -175,6 +177,7 @@ export function Navbar() {
               {favouriteIds.length}
             </span>
           </Link>
+          */}
           {isSignedIn ? (
             <>
               <button
@@ -400,6 +403,7 @@ export function Navbar() {
   )
 }
 
+/* Used by the commented-out cart and favourites icons
 function CartIcon() {
   return (
     <svg
@@ -435,6 +439,7 @@ function HeartIcon() {
     </svg>
   )
 }
+*/
 
 function SearchIcon() {
   return (

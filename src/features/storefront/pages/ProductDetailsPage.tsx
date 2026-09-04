@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'react-toastify'
+import { useEffect, useState } from 'react'
+// `useMemo` is only needed by the commented-out total-price calculation.
+// import { useMemo } from 'react'
+import { Link, useParams } from 'react-router-dom'
+// `useNavigate` and `toast` are only needed by the commented-out buy-now flow.
+// import { useNavigate } from 'react-router-dom'
+// import { toast } from 'react-toastify'
 import { getProductById, getProducts } from '../../../api/products.api'
-import { useAuth } from '../../../app/auth/AuthContext'
-import { BuyNowModal } from '../components/BuyNowModal'
+// `useAuth` and `BuyNowModal` are only needed by the commented-out buy-now flow.
+// import { useAuth } from '../../../app/auth/AuthContext'
+// import { BuyNowModal } from '../components/BuyNowModal'
 import { ProductCard, type Product } from '../components/ProductCard'
-import { useStorefront } from '../state/StorefrontContext'
+// `useStorefront` is only needed by the commented-out cart and favourites actions.
+// import { useStorefront } from '../state/StorefrontContext'
 
 const reviews = [
   {
@@ -29,20 +35,22 @@ const reviews = [
 ]
 
 export function ProductDetailsPage() {
-  const navigate = useNavigate()
-  const { isSignedIn } = useAuth()
+  // const navigate = useNavigate()
+  // const { isSignedIn } = useAuth()
   const { productId } = useParams()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loadingProduct, setLoadingProduct] = useState(true)
   const [quantity, setQuantity] = useState(1)
-  const [isBuyNowOpen, setIsBuyNowOpen] = useState(false)
+  // const [isBuyNowOpen, setIsBuyNowOpen] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [isZoomed, setIsZoomed] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [activeInfoTab, setActiveInfoTab] = useState<'description' | 'reviews'>('description')
-  const { addToCart, addToFavourites, isFavourite, isInCart } = useStorefront()
+  // `addToCart` and `isInCart` are unused while the add-to-cart button is commented out below.
+  // const { addToFavourites, isFavourite } = useStorefront()
 
+  /* Buy-now flow hidden for now
   const openBuyNow = () => {
     if (!product?.routeId) {
       toast.error('This product cannot be ordered right now')
@@ -57,6 +65,7 @@ export function ProductDetailsPage() {
 
     setIsBuyNowOpen(true)
   }
+  */
 
   useEffect(() => {
     if (!productId) {
@@ -100,7 +109,8 @@ export function ProductDetailsPage() {
     }
   }, [productId])
 
-  const totalPrice = useMemo(() => (product ? product.price * quantity : 0), [product, quantity])
+  // Total price hidden for now
+  // const totalPrice = useMemo(() => (product ? product.price * quantity : 0), [product, quantity])
 
   if (loadingProduct) {
     return <ProductDetailsSkeleton />
@@ -246,40 +256,26 @@ export function ProductDetailsPage() {
           </div>
 
           <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+            {/* Price hidden for now
             <p className="text-sm text-slate-600">Price</p>
             <p className="mt-1 text-4xl font-bold text-slate-900">
               ₦{product.price.toLocaleString()}
             </p>
+            */}
 
-            <div className="mt-4 flex items-center gap-3">
-              <p className="text-sm font-semibold text-slate-700">Quantity</p>
-              <div className="inline-flex items-center rounded-lg border border-slate-300">
-                <button
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="px-3 py-1.5 text-slate-700"
-                >
-                  -
-                </button>
-                <span className="min-w-8 text-center text-sm font-semibold">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="px-3 py-1.5 text-slate-700"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            
 
+            {/* Total price hidden for now
             <p className="mt-3 text-sm text-slate-600">
               Total Price:{' '}
               <span className="font-bold text-brand-red">
                 ₦{totalPrice.toLocaleString()}
               </span>
             </p>
+            */}
 
             <div className="mt-4 flex flex-wrap gap-3">
+              {/* Buy now and Add to cart hidden for now
               <button
                 type="button"
                 onClick={openBuyNow}
@@ -294,6 +290,8 @@ export function ProductDetailsPage() {
               >
                 {isInCart(product.id) ? 'Added to cart' : 'Add to cart'}
               </button>
+              */}
+              {/* Add to favourites hidden for now
               <button
                 type="button"
                 onClick={() => addToFavourites(product.id)}
@@ -305,6 +303,7 @@ export function ProductDetailsPage() {
               >
                 {isFavourite(product.id) ? 'Saved' : 'Add to favourites'}
               </button>
+              */}
             </div>
           </div>
         </div>
@@ -373,20 +372,21 @@ export function ProductDetailsPage() {
         )}
       </section>
 
-      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-5 md:p-8">
+      <section className="mt-10">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-green">
           You may also like
         </p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900 md:text-3xl">
           Related manufacturer products
         </h2>
-        <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
           {relatedProducts.map((item) => (
             <ProductCard key={item.id} product={item} />
           ))}
         </div>
       </section>
 
+      {/* Buy-now modal hidden for now
       {product.routeId && (
         <BuyNowModal
           open={isBuyNowOpen}
@@ -397,6 +397,7 @@ export function ProductDetailsPage() {
           estimatedTotal={totalPrice}
         />
       )}
+      */}
     </section>
   )
 }
