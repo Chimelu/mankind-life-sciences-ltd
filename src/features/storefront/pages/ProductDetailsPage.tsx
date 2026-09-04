@@ -41,7 +41,6 @@ export function ProductDetailsPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loadingProduct, setLoadingProduct] = useState(true)
-  const [quantity, setQuantity] = useState(1)
   // const [isBuyNowOpen, setIsBuyNowOpen] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 })
   const [isZoomed, setIsZoomed] = useState(false)
